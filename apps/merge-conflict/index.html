@@ -40,8 +40,9 @@
   </section>
   <section id="screen" style="display:none"></section>
 </main>
-<footer class="foot player">모니터 화면: <a href="?screen=1">?screen=1</a></footer>
+<footer class="foot player">모니터 화면: <a href="index.html?screen=1">?screen=1</a></footer>
 <script src="../../shared/core.js"></script>
+<script>if(!window.DFS){document.body.insertAdjacentHTML("afterbegin",'<div style="background:#ea4335;color:#fff;padding:14px;font-weight:700">⚠️ 공용 스크립트(shared/core.js)를 불러오지 못했어요. HTML 파일만 따로 받지 말고 저장소 전체(ZIP)를 받아 폴더 구조 그대로 열어주세요.</div>')}</script>
 <script>
 const QUESTIONS = [
   { id: "fri5", q: "금요일 오후 5시 배포", a: "가능하다", b: "절대 안 된다" },
