@@ -1,43 +1,134 @@
 /*
  * DevFest Seoul 2026 — 쉬는 시간 프로그램 공용 런타임
  *
- * 샘플 단계에서는 모든 데이터를 브라우저 localStorage에 저장합니다.
- * 실제 행사에서는 DFS.store 구현만 Firebase(Firestore) 등으로 바꾸면
- * 각 앱 코드는 그대로 쓸 수 있도록 get/set/update/on 인터페이스로 감쌌습니다.
+ * 저장 모드 2가지
+ *  1) 실시간 모드: shared/firebase-config.js 에 Firebase 설정이 있으면 Firestore로
+ *     모든 참가자 기기가 같은 데이터를 실시간으로 공유합니다. (QR로 접속하는 실제 행사용)
+ *  2) 로컬 모드: 설정이 없거나 Firebase 연결에 실패하면 이 브라우저(localStorage)에만 저장합니다.
+ *
+ * 앱 코드는 어느 모드든 DFS.store.get/set/update/push/on 만 사용합니다.
  */
 (function () {
   const NS = "dfs26:";
+  const COLLECTION = "dfs26";
+  const FB_VER = "10.14.1";
 
   function safeParse(raw, def) {
     if (raw == null) return def;
     try { return JSON.parse(raw); } catch (e) { return def; }
   }
+  function clone(v) { return v == null ? v : JSON.parse(JSON.stringify(v)); }
 
   const listeners = {};
+  function emit(key, value) { (listeners[key] || []).forEach((fn) => { try { fn(value); } catch (e) { console.error(e); } }); }
+
+  /* 기기별로만 저장하는 키: 참가자 정보, 금고 대화 기록 */
+  function isLocalKey(key) { return key === "user" || key.startsWith("qr:") || key.endsWith(":seeded") || (key.startsWith("vault:") && key !== "vault:champions"); }
+
+  /* ---------- 로컬 저장소 ---------- */
+  const local = {
+    get(key, def) { try { return safeParse(localStorage.getItem(NS + key), def); } catch (e) { return def; } },
+    set(key, value) { try { localStorage.setItem(NS + key, JSON.stringify(value)); } catch (e) { console.warn("local set failed", e); } },
+    remove(key) { try { localStorage.removeItem(NS + key); } catch (e) { /* noop */ } },
+  };
+
+  /* ---------- Firestore 실시간 저장소 ---------- */
+  const cfg = window.DFS_FIREBASE;
+  const remote = { on: false, fb: null, db: null, cache: {}, loaded: {}, subs: {}, readyResolve: null };
+  const ready = new Promise((res) => (remote.readyResolve = res));
+
+  async function initRemote() {
+    if (!cfg || !cfg.projectId) { remote.readyResolve("local"); return; }
+    try {
+      const [{ initializeApp }, fs] = await Promise.all([
+        import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-app.js`),
+        import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-firestore.js`),
+      ]);
+      const app = initializeApp(cfg);
+      remote.fb = fs;
+      remote.db = fs.getFirestore(app);
+      if (cfg.useEmulator) fs.connectFirestoreEmulator(remote.db, cfg.useEmulator[0], cfg.useEmulator[1]); // 로컬 테스트용
+      remote.on = true;
+      Object.keys(remote.subs).forEach((k) => subscribe(k, true));
+      remote.readyResolve("firebase");
+    } catch (e) {
+      console.warn("Firebase 연결 실패, 로컬 모드로 동작합니다", e);
+      remote.failed = true;
+      remote.readyResolve("local");
+      Object.keys(listeners).forEach((k) => emit(k, local.get(k, undefined)));
+    }
+    renderMode();
+  }
+
+  function docRef(key) { return remote.fb.doc(remote.db, COLLECTION, key); }
+
+  function subscribe(key, force) {
+    if (isLocalKey(key)) return;
+    if (remote.subs[key] && !force) return;
+    remote.subs[key] = true;
+    if (!remote.on) return; // 연결되면 initRemote가 다시 구독
+    remote.fb.onSnapshot(docRef(key), (snap) => {
+      const v = snap.exists() ? safeParse(snap.data().v, undefined) : undefined;
+      remote.cache[key] = v;
+      remote.loaded[key] = true;
+      emit(key, v);
+    }, (err) => console.warn("구독 오류", key, err));
+  }
+
+  function writeRemote(key, value) {
+    return remote.fb.setDoc(docRef(key), { v: JSON.stringify(value), at: Date.now() }).catch((e) => {
+      console.warn("저장 실패", key, e); toast("⚠️ 저장에 실패했어요. 네트워크를 확인해주세요");
+    });
+  }
+
+  const useRemote = (key) => remote.on && !isLocalKey(key);
+  /* Firebase 연결 중(첫 1~2초)에 들어온 쓰기는 연결 후 반영 */
+  const pending = (key) => cfg && !remote.on && !remote.failed && !isLocalKey(key);
 
   const store = {
     get(key, def) {
-      try { return safeParse(localStorage.getItem(NS + key), def); } catch (e) { return def; }
+      if (isLocalKey(key) || !cfg || remote.failed) return local.get(key, def);
+      subscribe(key);
+      const v = remote.cache[key];
+      return v === undefined ? def : clone(v);
     },
     set(key, value) {
-      try { localStorage.setItem(NS + key, JSON.stringify(value)); } catch (e) { console.warn("store.set failed", e); }
-      (listeners[key] || []).forEach((fn) => fn(value));
+      if (pending(key)) { ready.then(() => store.set(key, value)); emit(key, value); return value; }
+      if (useRemote(key)) { remote.cache[key] = clone(value); writeRemote(key, value); }
+      else local.set(key, value);
+      emit(key, value);
       return value;
     },
+    /* 여러 참가자가 동시에 누르는 좋아요/투표도 덮어쓰지 않도록 트랜잭션으로 반영 */
     update(key, def, fn) {
-      const next = fn(store.get(key, def));
-      return store.set(key, next);
+      def = clone(def); // 기본값 객체가 fn 안에서 변형되어 재사용되지 않도록
+      if (pending(key)) { const v = fn(store.get(key, clone(def))); emit(key, v); ready.then(() => store.update(key, def, fn)); return v; }
+      if (!useRemote(key)) { const next = fn(store.get(key, def)); return store.set(key, next); }
+      const next = fn(store.get(key, clone(def)));  // 화면에 즉시 반영 (낙관적 업데이트)
+      remote.cache[key] = clone(next);
+      emit(key, next);
+      const fs = remote.fb;
+      fs.runTransaction(remote.db, async (tx) => {
+        const snap = await tx.get(docRef(key));
+        const cur = snap.exists() ? safeParse(snap.data().v, clone(def)) : clone(def);
+        tx.set(docRef(key), { v: JSON.stringify(fn(cur)), at: Date.now() });
+      }).catch((e) => { console.warn("트랜잭션 실패", key, e); toast("⚠️ 저장에 실패했어요. 다시 시도해주세요"); });
+      return next;
     },
     push(key, item) {
-      return store.update(key, [], (arr) => (arr.push(item), arr));
+      return store.update(key, [], (arr) => (arr.push(clone(item)), arr));
     },
     remove(key) {
-      try { localStorage.removeItem(NS + key); } catch (e) { /* noop */ }
+      if (useRemote(key)) { remote.cache[key] = undefined; remote.fb.deleteDoc(docRef(key)); }
+      else local.remove(key);
     },
-    /** 같은 브라우저의 다른 탭(예: 모니터 화면)에서 값이 바뀌면 호출 */
+    /** 값이 바뀌면 호출: 실시간 모드에서는 다른 기기, 로컬 모드에서는 같은 브라우저 다른 탭 */
     on(key, fn) {
       (listeners[key] = listeners[key] || []).push(fn);
+      if (!isLocalKey(key) && cfg) subscribe(key);
     },
+    /** 이 키의 첫 데이터가 도착했는지 (실시간 모드) */
+    loaded(key) { return !useRemote(key) || !!remote.loaded[key]; },
     keys() {
       const out = [];
       try {
@@ -53,8 +144,17 @@
   window.addEventListener("storage", (e) => {
     if (!e.key || !e.key.startsWith(NS)) return;
     const key = e.key.slice(NS.length);
-    (listeners[key] || []).forEach((fn) => fn(safeParse(e.newValue, null)));
+    if (useRemote(key)) return;
+    emit(key, safeParse(e.newValue, null));
   });
+
+  function mode() { return remote.on ? "firebase" : "local"; }
+  function renderMode() {
+    const el = document.querySelector("[data-mode]");
+    if (!el) return;
+    el.textContent = remote.on ? "🟢 실시간" : "💾 이 기기만";
+    el.title = remote.on ? "모든 참가자와 실시간으로 공유돼요" : "Firebase 설정 전: 이 브라우저에만 저장돼요";
+  }
 
   function id(prefix) {
     return (prefix || "") + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -182,12 +282,15 @@
     host.outerHTML = `
       <div class="topbar">
         <a class="home" href="${depth}index.html"><span class="brand-dots"><i></i><i></i><i></i><i></i></span>DevFest Seoul 2026</a>
-        <span class="who" data-who></span>
+        <span class="row" style="gap:10px"><span class="who" data-mode></span><span class="who" data-who></span></span>
       </div>`;
     renderWho();
+    renderMode();
+    store.on("freq", renderWho);
   }
 
   document.addEventListener("DOMContentLoaded", mountTopbar);
+  initRemote();
 
-  window.DFS = { store, user, freq, id, esc, toast, shuffle, pick, timeAgo, qs, renderWho };
+  window.DFS = { store, user, freq, id, esc, toast, shuffle, pick, timeAgo, qs, renderWho, ready, mode };
 })();
