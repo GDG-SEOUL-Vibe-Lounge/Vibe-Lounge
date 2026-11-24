@@ -13,7 +13,7 @@
 
 | 항목 | 샘플 | 실제 행사 제안 |
 |---|---|---|
-| 데이터 공유 | 브라우저 localStorage (기기마다 따로) | Firebase Firestore로 `DFS.store` 교체, `on()`은 `onSnapshot`으로 |
+| 데이터 공유 | ✅ 구현 완료: `shared/firebase-config.js` 설정만 하면 Firestore 실시간 공유 ([deploy.md](deploy.md)) | |
 | 참가자 식별 | 아무 값이나 입력 | 티켓 구매 계정 UID 또는 체크인 시 1회용 코드 발급 |
 | 운영진 권한 | `?admin=1` 쿼리 | Firebase Auth + Security Rules로 운영진만 숨김 가능 |
 | 프리퀀시 | 웹 자동 적립 | 결정에 따라 웹 적립 유지 또는 완료 화면을 보여주고 실물 도장 |
