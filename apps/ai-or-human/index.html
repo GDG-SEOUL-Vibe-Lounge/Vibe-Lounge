@@ -79,6 +79,7 @@
 </main>
 <footer class="foot">세트 선택: <code>?set=sample</code>, 문항은 <code>questions.js</code>에서 관리</footer>
 
+<script src="../../shared/firebase-config.js"></script>
 <script src="../../shared/core.js"></script>
 <script>if(!window.DFS){document.body.insertAdjacentHTML("afterbegin",'<div style="background:#ea4335;color:#fff;padding:14px;font-weight:700">⚠️ 공용 스크립트(shared/core.js)를 불러오지 못했어요. HTML 파일만 따로 받지 말고 저장소 전체(ZIP)를 받아 폴더 구조 그대로 열어주세요.</div>')}</script>
 <script src="questions.js"></script>
@@ -202,6 +203,7 @@ document.getElementById("bonusBtn").onclick = (e) => {
   });
 };
 
+S.on("aih:attempts", () => { if (document.getElementById("intro").style.display !== "none") refreshIntro(); });
 refreshIntro();
 </script>
 </body>

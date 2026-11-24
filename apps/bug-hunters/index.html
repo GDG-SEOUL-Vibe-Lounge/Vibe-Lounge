@@ -69,6 +69,7 @@
   <h2>🏆 랭킹</h2><ol id="rank" class="small"></ol>
   <p class="muted small">레퍼런스: <a href="https://academybugs.com/find-bugs/" target="_blank" rel="noopener">AcademyBugs</a>, <a href="https://gauravkhurana.com/bug-hunt-challenge/" target="_blank" rel="noopener">Bug Hunt Challenge</a></p>
 </main>
+<script src="../../shared/firebase-config.js"></script>
 <script src="../../shared/core.js"></script>
 <script>if(!window.DFS){document.body.insertAdjacentHTML("afterbegin",'<div style="background:#ea4335;color:#fff;padding:14px;font-weight:700">⚠️ 공용 스크립트(shared/core.js)를 불러오지 못했어요. HTML 파일만 따로 받지 말고 저장소 전체(ZIP)를 받아 폴더 구조 그대로 열어주세요.</div>')}</script>
 <script>
@@ -219,6 +220,7 @@ function renderRank() {
   const r = S.get("bh:records", []).slice().sort((a, b) => b.found - a.found || a.sec - b.sec).slice(0, 10);
   document.getElementById("rank").innerHTML = r.map((x) => `<li><b>${DFS.esc(x.nick)}</b>, 🐛 ${x.found}개, ${x.sec}초</li>`).join("") || `<p class="muted">아직 기록이 없어요.</p>`;
 }
+S.on("bh:records", renderRank);
 renderRank();
 </script>
 </body>

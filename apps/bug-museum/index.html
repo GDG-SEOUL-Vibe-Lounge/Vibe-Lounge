@@ -93,6 +93,7 @@
 </main>
 <footer class="foot player-only">모니터 화면: <a href="index.html?screen=1">?screen=1</a>, 운영진 검수: <a href="index.html?admin=1">?admin=1</a></footer>
 
+<script src="../../shared/firebase-config.js"></script>
 <script src="../../shared/core.js"></script>
 <script>if(!window.DFS){document.body.insertAdjacentHTML("afterbegin",'<div style="background:#ea4335;color:#fff;padding:14px;font-weight:700">⚠️ 공용 스크립트(shared/core.js)를 불러오지 못했어요. HTML 파일만 따로 받지 말고 저장소 전체(ZIP)를 받아 폴더 구조 그대로 열어주세요.</div>')}</script>
 <script>
@@ -110,7 +111,7 @@ const screen = DFS.qs("screen") === "1";
 let curCat = "all";
 
 /* 예시 사연 (샘플 화면용, 실제 운영 시 삭제) */
-if (!S.get("museum:seeded", false)) {
+if (!window.DFS_FIREBASE && !S.get("museum:seeded", false)) {
   const now = Date.now();
   S.set("museum:items", [
     { id: DFS.id("b_"), cat: "absurd", title: "[예시] 범인은 전각 공백", story: "빌드가 계속 깨져서 오후 내내 의존성을 갈아엎었는데, 복붙한 설정 파일에 눈에 안 보이는 전각 공백이 하나 있었다.", nick: "예시봇", uid: "SEED", likes: ["A", "B", "C"], reacts: { same: ["A", "B"] }, reviews: [{ nick: "관람객1", text: "아 이거 진짜 무서움", at: now - 3e5 }], hidden: false, at: now - 7.2e6 },
@@ -216,6 +217,7 @@ function render() {
 
 function renderSpot() {
   const list = items().filter((x) => !x.hidden);
+  window._spotHas = list.length > 0;
   document.getElementById("spot").outerHTML = list.length ? exhibitHTML(DFS.pick(list), true).replace('class="card exhibit', 'id="spot" class="card exhibit pop') : `<div id="spot" class="card"><h3>🏛️ 2026 Bug Museum</h3><p>QR로 접속해 올해의 버그를 제보해 주세요!</p></div>`;
 }
 
@@ -224,7 +226,7 @@ if (screen) {
   document.getElementById("t-gallery").style.display = "none";
   renderSpot(); setInterval(renderSpot, 8000);
 }
-S.on("museum:items", render);
+S.on("museum:items", () => { render(); if (screen && !window._spotHas) renderSpot(); });
 render();
 </script>
 </body>

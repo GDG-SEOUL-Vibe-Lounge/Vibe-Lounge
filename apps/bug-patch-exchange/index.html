@@ -44,6 +44,7 @@
   <div id="detailView" style="display:none"></div>
   <p class="muted small" style="margin-top:20px">운영진 숨김 처리: <a href="index.html?admin=1">?admin=1</a>, 부적절한 내용은 숨김 처리될 수 있어요.</p>
 </main>
+<script src="../../shared/firebase-config.js"></script>
 <script src="../../shared/core.js"></script>
 <script>if(!window.DFS){document.body.insertAdjacentHTML("afterbegin",'<div style="background:#ea4335;color:#fff;padding:14px;font-weight:700">⚠️ 공용 스크립트(shared/core.js)를 불러오지 못했어요. HTML 파일만 따로 받지 말고 저장소 전체(ZIP)를 받아 폴더 구조 그대로 열어주세요.</div>')}</script>
 <script>
@@ -51,7 +52,7 @@ const S = DFS.store;
 const admin = DFS.qs("admin") === "1";
 let filter = "all";
 
-if (!S.get("bpx:seeded", false)) {
+if (!window.DFS_FIREBASE && !S.get("bpx:seeded", false)) {
   const now = Date.now();
   S.set("bpx:issues", [
     { id: "i1", n: 1, title: "사이드 프로젝트를 시작해도 항상 중간에 포기하게 돼요.", body: "처음엔 의욕이 넘치는데 기능을 계속 늘리다 보면 지쳐서 멈춰요.", label: "사이드 프로젝트", nick: "예시봇", uid: "SEED", plus: ["A", "B", "C"], hidden: false, resolved: false, at: now - 5.4e6,

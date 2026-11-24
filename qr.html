@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>QR 안내판 만들기, DevFest Seoul 2026</title>
+<link rel="stylesheet" href="shared/style.css" />
+<style>
+  .setup { margin-bottom: 18px; }
+  .boards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .board { background: #fff; color: #1d2433; border-radius: 18px; padding: 22px 20px; text-align: center; box-shadow: var(--shadow); break-inside: avoid; page-break-inside: avoid; position: relative; }
+  .board .dots { display: inline-flex; gap: 5px; margin-bottom: 6px; }
+  .board .dots i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+  .board .dots i:nth-child(1) { background: #4285f4; } .board .dots i:nth-child(2) { background: #ea4335; } .board .dots i:nth-child(3) { background: #fbbc04; } .board .dots i:nth-child(4) { background: #34a853; }
+  .board .ev { font-size: 12px; color: #5f6b85; font-weight: 700; }
+  .board .place { display: inline-block; margin-top: 8px; font-size: 13px; font-weight: 800; padding: 4px 12px; border-radius: 999px; background: #e8f0fe; color: #1a56c4; }
+  .board .em { font-size: 44px; margin-top: 6px; }
+  .board h2 { margin: 4px 0 6px; font-size: 24px; color: #111; }
+  .board p { margin: 0 0 12px; font-size: 14px; color: #444; word-break: keep-all; }
+  .board .qr svg { width: 210px; height: 210px; }
+  .board .url { font-size: 11px; color: #777; word-break: break-all; margin-top: 6px; font-family: ui-monospace, Menlo, monospace; }
+  .board .scan { font-weight: 800; margin-top: 4px; }
+  .board .dl { position: absolute; top: 10px; right: 10px; }
+  @media print {
+    @page { size: A4; margin: 12mm; }
+    body { background: #fff; }
+    .topbar, .setup, .noprint, footer { display: none !important; }
+    .wrap { max-width: none; padding: 0; }
+    .boards { grid-template-columns: 1fr 1fr; gap: 10mm; }
+    .board { box-shadow: none; border: 1px solid #ddd; }
+    .board .dl { display: none; }
+    .board { padding: 12px 12px 10px; border-radius: 12px; }
+    .board .em { font-size: 30px; margin-top: 2px; }
+    .board h2 { font-size: 19px; margin: 2px 0 4px; }
+    .board p { font-size: 12px; margin-bottom: 6px; }
+    .board .qr svg { width: 52mm; height: 52mm; }
+    .board .url { font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+<div data-topbar data-depth=""></div>
+<main class="wrap wide">
+  <div class="setup">
+    <h1>📱 QR 안내판 만들기</h1>
+    <p class="lead">참가자가 휴대폰으로 스캔하면 바로 프로그램이 열리는 QR 안내판이에요. 인쇄하거나 PDF로 저장해 부스, 복도, 바이브라운지에 붙이세요.</p>
+    <div class="card">
+      <label style="margin-top:0">배포 주소 (QR에 들어갈 기본 URL)</label>
+      <div class="row"><input type="text" id="base" style="flex:1" /><button class="btn" id="apply">적용</button></div>
+      <p class="muted small" id="baseHint" style="margin:8px 0 0"></p>
+      <div class="row" style="margin-top:12px">
+        <label style="margin:0"><input type="checkbox" id="showOthers" /> 후보 프로그램 QR도 만들기</label>
+        <label style="margin:0"><input type="checkbox" id="showHub" checked /> 전체 목록(허브) QR 포함</label>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="btn green" onclick="window.print()">🖨️ 인쇄 / PDF 저장</button></div>
+      <div class="notice" id="modeNote" style="margin-top:12px"></div>
+    </div>
+  </div>
+  <div class="boards" id="boards"></div>
+</main>
+<footer class="foot">QR 생성: qrcode-generator (MIT, Kazuhiko Arase), 'QR Code'는 DENSO WAVE의 등록상표입니다.</footer>
+<script src="shared/firebase-config.js"></script>
+<script src="shared/core.js"></script>
+<script>if(!window.DFS){document.body.insertAdjacentHTML("afterbegin",'<div style="background:#ea4335;color:#fff;padding:14px;font-weight:700">⚠️ 공용 스크립트(shared/core.js)를 불러오지 못했어요. 저장소 전체를 받아 폴더 구조 그대로 열어주세요.</div>')}</script>
+<script src="shared/vendor/qrcode.js"></script>
+<script>
+const DEFAULT_PUBLIC = "https://gdg-seoul-vibe-lounge.github.io/Vibe-Lounge/";
+const BOARDS = [
+  { final: true, path: "apps/build-roulette/index.html", em: "🎰", name: "BUILD ROULETTE", place: "바이브라운지", desc: "룰렛 3개를 돌려 세상에 없던 서비스를 기획해 보세요! (1~2분)" },
+  { final: true, path: "apps/ai-or-human/index.html", em: "🤖", name: "AI일까, 사람일까?", place: "복도", desc: "10문제를 보고 AI 작품인지 사람 작품인지 맞혀보세요! 7개 이상이면 프리퀀시 🎟️" },
+  { final: true, path: "apps/bug-museum/index.html", em: "🏛️", name: "2026 Bug Museum", place: "복도", desc: "올해 겪은 황당한 버그를 제보하고, 공감되는 사연에 ❤️를 눌러주세요!" },
+  { path: "apps/ai-vault/index.html", em: "🔐", name: "AI 금고 털기", place: "부스", desc: "금고지기 AI를 대화로 꼬드겨 비밀번호를 알아내세요!" },
+  { path: "apps/bug-patch-exchange/index.html", em: "🛠️", name: "Bug & Patch Exchange", place: "게시판", desc: "고민은 Issue로, 조언은 Patch로!" },
+  { path: "apps/merge-conflict/index.html", em: "⚔️", name: "MERGE CONFLICT", place: "투표", desc: "금요일 5시 배포, 가능하다 vs 절대 안 된다?" },
+  { path: "apps/worst-ux/index.html", em: "⏰", name: "WORST UX EVER", place: "타임어택", desc: "세상에서 가장 불편한 쇼핑몰에서 미션을 빨리 끝내세요!" },
+  { path: "apps/bug-hunters/index.html", em: "🐛", name: "BUG HUNTERS", place: "챌린지", desc: "평범한 쇼핑몰에 숨은 버그 6개를 찾아 신고하세요!" },
+  { path: "apps/rhythm-challenge/index.html", em: "🥁", name: "크리스마스 리듬 챌린지", place: "부스", desc: "박자에 맞춰 카드 이름을 말하는 3단계 리듬 게임!" },
+];
+const HUB = { path: "index.html", em: "🎄", name: "쉬는 시간 프로그램 전체", place: "전체 목록", desc: "세션 사이, 자기 속도로 즐기는 프로그램 모음" };
+
+function guessBase() {
+  const saved = DFS.store.get("qr:base", null);
+  if (saved) return saved;
+  if (location.protocol === "http:" || location.protocol === "https:") {
+    const h = location.hostname;
+    if (h !== "localhost" && h !== "127.0.0.1") return location.href.replace(/qr\.html.*$/, "").replace(/[?#].*$/, "");
+  }
+  return DEFAULT_PUBLIC;
+}
+function norm(u) { u = u.trim(); if (!/^https?:\/\//.test(u)) u = "https://" + u; return u.endsWith("/") ? u : u + "/"; }
+
+function svgQR(text) {
+  const qr = qrcode(0, "M");
+  qr.addData(text); qr.make();
+  return qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+}
+
+function pngDownload(text, name) {
+  const qr = qrcode(0, "M"); qr.addData(text); qr.make();
+  const n = qr.getModuleCount(), cell = 16, m = 4 * cell, size = n * cell + m * 2;
+  const c = document.createElement("canvas"); c.width = c.height = size;
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, size, size); g.fillStyle = "#000";
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (qr.isDark(r, k)) g.fillRect(m + k * cell, m + r * cell, cell, cell);
+  const a = document.createElement("a"); a.download = `qr-${name}.png`; a.href = c.toDataURL("image/png"); a.click();
+}
+
+function render() {
+  const base = norm(document.getElementById("base").value);
+  const list = [];
+  if (document.getElementById("showHub").checked) list.push(HUB);
+  BOARDS.forEach((b) => { if (b.final || document.getElementById("showOthers").checked) list.push(b); });
+  document.getElementById("boards").innerHTML = list.map((b, i) => {
+    const url = base + b.path;
+    return `<div class="board">
+      <button class="btn ghost sm dl noprint" data-i="${i}" style="color:#333;border-color:#ccc">PNG</button>
+      <div class="dots"><i></i><i></i><i></i><i></i></div>
+      <div class="ev">GDG Seoul, DevFest Seoul 2026</div>
+      <div class="place">${DFS.esc(b.place)}</div>
+      <div class="em">${b.em}</div>
+      <h2>${DFS.esc(b.name)}</h2>
+      <p>${DFS.esc(b.desc)}</p>
+      <div class="qr">${svgQR(url)}</div>
+      <div class="scan">📷 카메라로 스캔하세요</div>
+      <div class="url">${DFS.esc(url)}</div>
+    </div>`;
+  }).join("");
+  document.querySelectorAll(".dl").forEach((btn) => btn.onclick = () => { const b = list[+btn.dataset.i]; pngDownload(base + b.path, b.path.split("/")[1] || "hub"); });
+}
+
+const baseEl = document.getElementById("base");
+baseEl.value = guessBase();
+document.getElementById("baseHint").innerHTML = `GitHub Pages를 켜면 기본 주소는 <code>${DEFAULT_PUBLIC}</code> 이에요. 다른 곳(Firebase Hosting 등)에 배포했다면 그 주소를 넣으세요.`;
+document.getElementById("apply").onclick = () => { DFS.store.set("qr:base", norm(baseEl.value)); render(); };
+["showOthers", "showHub"].forEach((id) => document.getElementById(id).onchange = render);
+DFS.ready.then((m) => {
+  document.getElementById("modeNote").innerHTML = m === "firebase"
+    ? "🟢 실시간 모드: QR로 접속한 모든 참가자가 같은 데이터를 공유해요."
+    : "⚠️ 아직 로컬 모드예요. 이대로면 참가자마다 자기 휴대폰에만 저장돼서 좋아요, 투표, 전시가 서로 안 보여요. <code>shared/firebase-config.js</code>를 설정하세요 (docs/deploy.md).";
+});
+render();
+</script>
+</body>
+</html>

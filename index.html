@@ -53,6 +53,7 @@
   <h2>🛠️ 운영 도구</h2>
   <div class="card small">
     <div class="row" style="gap:14px">
+      <a href="qr.html"><b>📱 QR 안내판 만들기</b></a>
       <a href="apps/build-roulette/index.html?screen=1">룰렛 모니터</a>
       <a href="apps/bug-museum/index.html?screen=1">박물관 모니터</a>
       <a href="apps/merge-conflict/index.html?screen=1">투표 모니터</a>
@@ -64,10 +65,11 @@
       <button class="btn ghost sm" id="logout">참가자 전환</button>
       <button class="btn ghost sm" id="reset">샘플 데이터 초기화</button>
     </div>
-    <p class="muted" style="margin:10px 0 0">샘플은 이 브라우저(localStorage)에만 저장돼요. 실제 행사에서는 <code>shared/core.js</code>의 store를 Firebase로 교체하면 여러 기기에서 공유됩니다.</p>
+    <p class="muted" style="margin:10px 0 0" id="modeInfo"></p>
   </div>
 </main>
 <footer class="foot">GDG Seoul DevFest 2026 운영팀, 샘플 v0.1</footer>
+<script src="shared/firebase-config.js"></script>
 <script src="shared/core.js"></script>
 <script>if(!window.DFS){document.body.insertAdjacentHTML("afterbegin",'<div style="background:#ea4335;color:#fff;padding:14px;font-weight:700">⚠️ 공용 스크립트(shared/core.js)를 불러오지 못했어요. HTML 파일만 따로 받지 말고 저장소 전체(ZIP)를 받아 폴더 구조 그대로 열어주세요.</div>')}</script>
 <script>
@@ -105,6 +107,8 @@ document.getElementById("reset").onclick = () => {
   if (!document.getElementById("reset").dataset.armed) { document.getElementById("reset").dataset.armed = "1"; document.getElementById("reset").textContent = "한 번 더 누르면 초기화"; return; }
   DFS.store.keys().forEach((k) => DFS.store.remove(k)); location.reload();
 };
+DFS.store.on("freq", renderStamps);
+DFS.ready.then((m) => { document.getElementById("modeInfo").innerHTML = m === "firebase" ? "🟢 실시간 모드: 모든 참가자 기기가 같은 데이터를 공유해요." : "💾 로컬 모드: 이 브라우저에만 저장돼요. 행사용 실시간 공유는 <code>shared/firebase-config.js</code> 설정 (docs/deploy.md)"; });
 renderStamps();
 </script>
 </body>

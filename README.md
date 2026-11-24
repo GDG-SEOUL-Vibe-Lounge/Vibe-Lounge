@@ -8,6 +8,7 @@
 GDG Seoul DevFest Seoul 2026 운영팀 스레드(#devfestseoul-2026, 프로그램 및 운영 준비)에서 나온 아이디어를
 바로 체험할 수 있는 웹 샘플로 만든 저장소입니다.
 
+- **QR로 바로 쓰는 실시간 버전 배포: [`docs/deploy.md`](docs/deploy.md)** (GitHub Pages + Firebase, QR 안내판 `qr.html`)
 - 스레드 요약: [`docs/thread-summary.md`](docs/thread-summary.md)
 - 운영 가이드 / 실제 행사 전환 방법: [`docs/operations.md`](docs/operations.md)
 
@@ -47,7 +48,8 @@ GitHub Pages: Settings → Pages → Branch `main` / root 로 켜면 QR 코드�
 - 참가자 확인(티켓 번호 / 현장 코드 + 닉네임), 프로그램당 1개 프리퀀시 적립
 - `?screen=1` 모니터 화면 (룰렛, 박물관, 투표)
 - `?admin=1` 운영진 숨김 처리 (룰렛, 박물관, 고민 게시판)
-- 샘플 데이터는 브라우저 localStorage에만 저장 → 실제 행사에서는 `shared/core.js`의 `DFS.store`를 Firebase로 교체
+- 저장 모드: `shared/firebase-config.js` 설정 시 **실시간 공유(Firestore)**, 미설정 시 이 브라우저에만 저장 (오른쪽 위 `🟢 실시간` / `💾 이 기기만` 표시)
+- `qr.html`: 배포 주소 기준 QR 안내판 생성, A4 인쇄 / PNG 다운로드
 
 ### 저작권 메모
 

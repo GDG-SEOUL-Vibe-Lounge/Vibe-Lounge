@@ -80,6 +80,7 @@
 </main>
 <footer class="foot player">모니터 화면: <a href="index.html?screen=1">?screen=1</a>, 운영진 숨김 처리: <a href="index.html?admin=1">?admin=1</a></footer>
 
+<script src="../../shared/firebase-config.js"></script>
 <script src="../../shared/core.js"></script>
 <script>if(!window.DFS){document.body.insertAdjacentHTML("afterbegin",'<div style="background:#ea4335;color:#fff;padding:14px;font-weight:700">⚠️ 공용 스크립트(shared/core.js)를 불러오지 못했어요. HTML 파일만 따로 받지 말고 저장소 전체(ZIP)를 받아 폴더 구조 그대로 열어주세요.</div>')}</script>
 <script>
@@ -231,6 +232,7 @@ function renderWall() {
 function renderSpot() {
   const ideas = S.get("roulette:ideas", []).filter((x) => !x.hidden);
   const el = document.getElementById("spot");
+  window._spotHas = ideas.length > 0;
   if (!ideas.length) { el.innerHTML = `<div class="name">🎰 BUILD ROULETTE</div><div class="combo">QR로 접속해 룰렛을 돌려보세요!</div>`; return; }
   const x = DFS.pick(ideas);
   el.innerHTML = `<div class="combo">${DFS.esc(x.combo[0])}, ${DFS.esc(x.combo[1])}, ${DFS.esc(x.combo[2])}</div>
@@ -247,7 +249,7 @@ if (screen) {
   renderSpot();
   setInterval(renderSpot, 7000);
 }
-S.on("roulette:ideas", () => renderWall());
+S.on("roulette:ideas", () => { renderWall(); if (screen && !window._spotHas) renderSpot(); });
 renderReels();
 renderWall();
 </script>
