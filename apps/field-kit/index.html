@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>현장 도우미, 릴레이 그림, 컬러 헌트, 바이브라운지 타이머</title>
+<link rel="stylesheet" href="../../shared/style.css" />
+<style>
+  .secret { font-size: 30px; font-weight: 900; text-align: center; padding: 30px 10px; border-radius: 16px; background: var(--bg-2); border: 2px dashed var(--line); cursor: pointer; user-select: none; }
+  .swatch { width: 100%; height: 120px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; text-shadow: 0 1px 4px rgba(0,0,0,.5); }
+  .clock { font-size: clamp(56px, 16vw, 120px); font-weight: 900; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
+  .clock.warn { color: var(--red); }
+  .pdots { display: flex; gap: 8px; justify-content: center; margin: 8px 0; }
+  .pdots i { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); }
+  .pdots i.used { background: var(--blue); border-color: var(--blue); }
+  .order li { padding: 6px 0; }
+  .order li.cur { font-weight: 900; color: var(--yellow); }
+</style>
+</head>
+<body>
+<div data-topbar></div>
+<main class="wrap">
+  <h1>🧰 현장 도우미</h1>
+  <p class="lead">운영 요원이 태블릿/노트북 하나로 바로 진행할 수 있는 소형 프로그램 도구 모음이에요.</p>
+  <div class="tabs" id="tabs">
+    <button data-t="relay" class="on">🖌️ 릴레이 그림</button>
+    <button data-t="color">💚 컬러 헌트</button>
+    <button data-t="vibe">⚡ 바이브라운지 타이머</button>
+  </div>
+
+  <!-- 릴레이 그림 그리기 -->
+  <section id="t-relay">
+    <div class="card" style="margin-top:14px">
+      <h3>릴레이 그림 그리기</h3>
+      <p class="muted small">2~4명이 각자 받은 크리스마스 비밀 제시어를 한 그림에 이어 그린 뒤, 서로의 제시어를 맞혀요.
+        2명이면 '인물, 행동', 3명이면 '장소', 4명이면 '소품'까지 추가돼요. 화면을 한 명씩 돌려가며 확인하세요.</p>
+      <label>참가 인원</label>
+      <div class="tabs" id="pcount"><button data-n="2">2명</button><button data-n="3">3명</button><button data-n="4" class="on">4명</button></div>
+      <button class="btn block" id="deal" style="margin-top:12px">제시어 카드 나누기</button>
+    </div>
+    <div id="dealArea"></div>
+  </section>
+
+  <!-- 컬러 헌트 -->
+  <section id="t-color" style="display:none">
+    <div class="card" style="margin-top:14px">
+      <h3>크리스마스 컬러 헌트</h3>
+      <p class="muted small">안내판의 목표 색과 개수를 확인하고, 행사장에서 그 색을 가진 <b>서로 다른 종류</b>의 물건을 찾아 사진을 찍어 스태프에게 보여주세요.
+        물건은 제자리에 두고 사진으로만 확인해요.</p>
+      <div class="swatch" id="sw"></div>
+      <div class="row" style="margin-top:10px"><button class="btn ghost sm" id="newMission">미션 바꾸기 (운영진)</button><span class="muted small" id="mInfo"></span></div>
+      <label>찾은 물건 종류 기록 (스태프 확인용)</label>
+      <div class="row"><input type="text" id="itemIn" placeholder="예: 안내 표지판" style="flex:1" /><button class="btn sm" id="itemAdd">추가</button></div>
+      <ul id="found" class="small"></ul>
+      <button class="btn green block" id="colorDone" disabled>미션 완료 확인</button>
+    </div>
+  </section>
+
+  <!-- 바이브라운지 타이머 -->
+  <section id="t-vibe" style="display:none">
+    <div class="tabs" style="margin-top:14px" id="vmode"><button data-m="prompt" class="on">3-Prompt 챌린지</button><button data-m="relay">릴레이 바이브코딩</button></div>
+    <div class="card" style="margin-top:10px" id="vPrompt">
+      <h3>3-Prompt 챌린지 (프롬프트 횟수 제한전)</h3>
+      <p class="muted small">코드 직접 수정 금지! 오직 프롬프트 3~5번만으로 미니게임(예: 산타 장애물 피하기, 개발자 퇴근 탈출 게임)이나 웹앱을 완성해요. 10~15분 컷.</p>
+      <div class="row"><label style="margin:0">프롬프트 횟수</label><select id="pMax" style="width:auto"><option>3</option><option>4</option><option>5</option></select>
+        <label style="margin:0">제한 시간</label><select id="pMin" style="width:auto"><option value="10">10분</option><option value="12">12분</option><option value="15">15분</option></select></div>
+      <div class="clock" id="pClock">10:00</div>
+      <div class="pdots" id="pDots"></div>
+      <div class="row" style="justify-content:center"><button class="btn" id="pStart">시작</button><button class="btn yellow" id="pUse">프롬프트 1회 사용</button><button class="btn ghost" id="pReset">초기화</button></div>
+    </div>
+    <div class="card" style="margin-top:10px; display:none" id="vRelay">
+      <h3>릴레이 바이브코딩 (이어달리기 코딩)</h3>
+      <p class="muted small">3~4명이 한 팀이 되어 각자 7분씩 하나의 서비스를 이어 만들어요. 앞사람이 뭘 만들었는지 설명 없이 <b>화면과 마지막 프롬프트 1줄만 보고</b> 기능을 덧붙여요.</p>
+      <label>주자 이름 (쉼표로 구분, 라운지에 들어온 순서)</label>
+      <input type="text" id="rNames" placeholder="예: 다영, 서연, 병승, 두현" />
+      <div class="row" style="margin-top:8px"><label style="margin:0">주자당</label><select id="rMin" style="width:auto"><option value="5">5분</option><option value="7" selected>7분</option><option value="10">10분</option></select></div>
+      <div class="clock" id="rClock">7:00</div>
+      <ol class="order" id="rOrder"></ol>
+      <label>바통 메모: 마지막 프롬프트 1줄 (다음 주자에게만 보여줘요)</label>
+      <input type="text" id="rBaton" maxlength="120" placeholder="예: 눈이 내리는 배경을 추가해줘" />
+      <div class="row" style="margin-top:10px; justify-content:center"><button class="btn" id="rStart">릴레이 시작</button><button class="btn yellow" id="rNext">바통 터치 →</button></div>
+      <div class="notice" id="rShow" style="display:none; margin-top:10px"></div>
+    </div>
+  </section>
+</main>
+<script src="../../shared/core.js"></script>
+<script>
+/* ---------- 탭 ---------- */
+document.querySelectorAll("#tabs button").forEach((b) => b.onclick = () => {
+  document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x === b));
+  ["relay", "color", "vibe"].forEach((t) => document.getElementById("t-" + t).style.display = t === b.dataset.t ? "block" : "none");
+});
+
+/* ---------- 릴레이 그림 ---------- */
+const PROMPTS = {
+  "인물": ["산타", "루돌프", "눈사람", "요정", "진저브레드맨", "북극곰", "펭귄", "개발자"],
+  "행동": ["스키 타기", "선물 포장하기", "캐럴 부르기", "굴뚝 타기", "춤추기", "코딩하기", "낮잠 자기", "눈싸움하기"],
+  "장소": ["달", "북극", "지하철", "편의점", "바닷속", "트리 꼭대기", "행사장", "사막"],
+  "소품": ["우산", "노트북", "양말", "종", "목도리", "케이크", "썰매", "망원경"],
+};
+let pN = 4;
+document.querySelectorAll("#pcount button").forEach((b) => b.onclick = () => { document.querySelectorAll("#pcount button").forEach((x) => x.classList.toggle("on", x === b)); pN = +b.dataset.n; });
+document.getElementById("deal").onclick = () => {
+  const cats = ["인물", "행동", "장소", "소품"].slice(0, pN);
+  const words = cats.map((c) => ({ c, w: DFS.pick(PROMPTS[c]) }));
+  const order = DFS.shuffle(words);
+  const area = document.getElementById("dealArea");
+  area.innerHTML = order.map((x, i) => `<div class="card"><div class="row between"><b>${i + 1}번 주자</b><span class="tag">${x.c}</span></div>
+      <div class="secret" data-w="${DFS.esc(x.w)}" style="margin-top:8px">👆 눌러서 확인</div></div>`).join("") +
+    `<div class="card"><b>정답 공개</b><p class="muted small">모두 그린 뒤 서로의 제시어를 추측하고 마지막에 공개해요.</p><button class="btn ghost sm" id="reveal">전체 공개</button><div id="ans" style="margin-top:8px"></div></div>`;
+  area.querySelectorAll(".secret").forEach((el) => {
+    el.onclick = () => { const shown = el.dataset.shown === "1"; el.textContent = shown ? "👆 눌러서 확인" : el.dataset.w; el.dataset.shown = shown ? "0" : "1"; };
+  });
+  area.querySelector("#reveal").onclick = () => {
+    area.querySelector("#ans").innerHTML = `<b style="font-size:20px">${order.map((x) => DFS.esc(x.w)).join(" / ")}</b><div class="muted small">예: '산타 / 스키 타기 / 달 / 우산' → 달에서 우산을 쓰고 스키를 타는 산타</div>`;
+  };
+};
+
+/* ---------- 컬러 헌트 ---------- */
+const COLORS = [["주황색", "#f28c28"], ["보라색", "#8e5bd8"], ["하늘색", "#7cc5f0"], ["분홍색", "#f06aa0"], ["금색", "#d4af37"], ["연두색", "#9bd45a"]];
+let mission, found = [];
+function newMission() {
+  const [n, hex] = DFS.pick(COLORS); const cnt = DFS.pick([3, 3, 4]);
+  mission = { n, hex, cnt }; found = [];
+  const sw = document.getElementById("sw"); sw.style.background = hex; sw.textContent = `${n} 물건 ${cnt}종 찾기`;
+  document.getElementById("mInfo").textContent = "목표색과 개수는 현장 환경에 맞춰 조정하세요";
+  renderFound();
+}
+function renderFound() {
+  document.getElementById("found").innerHTML = found.map((f, i) => `<li>${DFS.esc(f)} <a href="#" data-x="${i}">삭제</a></li>`).join("");
+  document.querySelectorAll("[data-x]").forEach((a) => a.onclick = (e) => { e.preventDefault(); found.splice(+a.dataset.x, 1); renderFound(); });
+  const b = document.getElementById("colorDone"); b.disabled = found.length < mission.cnt; b.textContent = `미션 완료 확인 (${found.length}/${mission.cnt})`;
+}
+document.getElementById("itemAdd").onclick = () => {
+  const inp = document.getElementById("itemIn"); const v = inp.value.trim(); if (!v) return;
+  // 같은 종류 반복 촬영은 제외
+  if (found.some((f) => f.replace(/\s/g, "") === v.replace(/\s/g, ""))) return DFS.toast("같은 종류의 물건은 한 번만 인정돼요");
+  found.push(v); inp.value = ""; renderFound();
+};
+document.getElementById("newMission").onclick = newMission;
+document.getElementById("colorDone").onclick = async () => {
+  const u = await DFS.user.require({ needNick: true });
+  DFS.freq.award(u.uid, "color-hunt", "크리스마스 컬러 헌트"); DFS.renderWho();
+  DFS.toast("미션 완료! 🎉"); newMission();
+};
+newMission();
+
+/* ---------- 바이브라운지 타이머 ---------- */
+document.querySelectorAll("#vmode button").forEach((b) => b.onclick = () => {
+  document.querySelectorAll("#vmode button").forEach((x) => x.classList.toggle("on", x === b));
+  document.getElementById("vPrompt").style.display = b.dataset.m === "prompt" ? "block" : "none";
+  document.getElementById("vRelay").style.display = b.dataset.m === "relay" ? "block" : "none";
+});
+function fmt(s) { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+function beep() { try { const a = new (window.AudioContext || window.webkitAudioContext)(); const o = a.createOscillator(); o.connect(a.destination); o.frequency.value = 660; o.start(); o.stop(a.currentTime + .4); } catch (e) {} }
+
+// 3-Prompt
+let p = { used: 0, end: 0, t: null };
+function pRender() {
+  const max = +document.getElementById("pMax").value;
+  document.getElementById("pDots").innerHTML = Array.from({ length: max }, (_, i) => `<i class="${i < p.used ? "used" : ""}"></i>`).join("");
+  const left = p.end ? (p.end - Date.now()) / 1000 : +document.getElementById("pMin").value * 60;
+  const c = document.getElementById("pClock"); c.textContent = fmt(left); c.classList.toggle("warn", p.end && left < 60);
+  if (p.end && left <= 0) { clearInterval(p.t); p.end = 0; beep(); DFS.toast("⏰ 시간 종료! 결과물을 공개해 주세요"); }
+}
+document.getElementById("pStart").onclick = () => { p.end = Date.now() + document.getElementById("pMin").value * 60000; clearInterval(p.t); p.t = setInterval(pRender, 200); };
+document.getElementById("pUse").onclick = () => {
+  const max = +document.getElementById("pMax").value;
+  if (p.used >= max) return DFS.toast("프롬프트를 모두 사용했어요!");
+  p.used++; pRender(); if (p.used === max) DFS.toast("마지막 프롬프트였어요. 결과는 그대로!");
+};
+document.getElementById("pReset").onclick = () => { clearInterval(p.t); p = { used: 0, end: 0, t: null }; pRender(); };
+["pMax", "pMin"].forEach((id) => document.getElementById(id).onchange = pRender);
+pRender();
+
+// 릴레이 바이브코딩
+let r = { names: [], idx: -1, end: 0, t: null, baton: "" };
+function rRender() {
+  document.getElementById("rOrder").innerHTML = r.names.map((n, i) => `<li class="${i === r.idx ? "cur" : ""}">${DFS.esc(n)} ${i < r.idx ? "✅" : i === r.idx ? "← 코딩 중" : ""}</li>`).join("");
+  const left = r.end ? (r.end - Date.now()) / 1000 : +document.getElementById("rMin").value * 60;
+  const c = document.getElementById("rClock"); c.textContent = fmt(left); c.classList.toggle("warn", r.end && left < 60);
+  if (r.end && left <= 0) { r.end = 0; clearInterval(r.t); beep(); DFS.toast("⏰ 바통 터치 시간!"); }
+}
+document.getElementById("rStart").onclick = () => {
+  r.names = document.getElementById("rNames").value.split(",").map((s) => s.trim()).filter(Boolean);
+  if (r.names.length < 2) return DFS.toast("주자를 2명 이상 입력하세요");
+  r.idx = 0; r.end = Date.now() + document.getElementById("rMin").value * 60000; clearInterval(r.t); r.t = setInterval(rRender, 200);
+  document.getElementById("rShow").style.display = "none"; rRender();
+};
+document.getElementById("rNext").onclick = () => {
+  if (r.idx < 0) return;
+  const baton = document.getElementById("rBaton").value.trim();
+  r.idx++;
+  document.getElementById("rBaton").value = "";
+  if (r.idx >= r.names.length) {
+    clearInterval(r.t); r.end = 0; rRender();
+    const s = document.getElementById("rShow"); s.style.display = "block"; s.innerHTML = "🏁 릴레이 완주! 처음 의도와 얼마나 달라졌는지 다 같이 확인해 보세요.";
+    return;
+  }
+  r.end = Date.now() + document.getElementById("rMin").value * 60000;
+  const s = document.getElementById("rShow"); s.style.display = "block";
+  s.innerHTML = `<b>${DFS.esc(r.names[r.idx])}</b> 님 차례! 앞사람의 마지막 프롬프트: <b>${baton ? DFS.esc(baton) : "(메모 없음)"}</b>`;
+  rRender();
+};
+rRender();
+</script>
+</body>
+</html>

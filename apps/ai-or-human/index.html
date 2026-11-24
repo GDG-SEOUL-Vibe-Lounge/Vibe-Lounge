@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI일까 사람일까?, DevFest Seoul 2026 쉬는 시간 퀴즈</title>
+<link rel="stylesheet" href="../../shared/style.css" />
+<style>
+  .hero { background: linear-gradient(160deg, #cfe8fb, #e9f5ff); color: #17325c; border-radius: 20px; padding: 26px 20px; text-align: center; }
+  .hero h1 { color: #17325c; font-size: 30px; }
+  .hero .bots { font-size: 56px; letter-spacing: 18px; }
+  .q { font-size: 19px; line-height: 1.7; white-space: pre-wrap; background: #fff; color: #1d2b44; border-radius: 16px; padding: 22px 18px; min-height: 120px; display: flex; align-items: center; justify-content: center; text-align: center; word-break: keep-all; }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .choice { font-size: 20px; padding: 18px 10px; border-radius: 16px; border: 2px solid transparent; font-weight: 800; cursor: pointer; font-family: inherit; }
+  .choice.ai { background: #e8f0fe; color: #1a56c4; }
+  .choice.human { background: #fff4d6; color: #a05a00; }
+  .choice.right { border-color: var(--green); box-shadow: 0 0 0 3px rgba(52,168,83,.35); }
+  .choice.wrong { border-color: var(--red); opacity: .7; }
+  .feedback { margin-top: 14px; }
+  .feedback .verdict { font-weight: 900; font-size: 18px; }
+  .grade { font-size: 34px; font-weight: 900; margin: 6px 0; }
+  .review li { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div data-topbar></div>
+<main class="wrap">
+  <section id="intro">
+    <div class="hero">
+      <div class="muted small" style="color:#4b6a99">GDG Seoul DevFest 2026, 쉬는 시간 퀴즈</div>
+      <h1>AI일까, 사람일까?</h1>
+      <div class="bots">🤖🧑</div>
+      <p style="margin:6px 0 0">글, 커밋 메시지, 코드 주석, 광고 문구…<br>10문제를 보고 <b>AI 작품</b>인지 <b>사람 작품</b>인지 맞혀보세요.</p>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>참여 방법</h3>
+      <ul class="small" style="margin:6px 0 0; padding-left:18px">
+        <li>문제당 <b>"AI"</b> 또는 <b>"사람"</b> 선택 → 바로 정답과 해설 공개</li>
+        <li><b id="passN">7</b>개 이상 맞히면 프리퀀시 적립 🎟️</li>
+        <li>도전 기회는 최초 1회 + <b>재도전 2회</b>까지</li>
+        <li>결과 등급: AI 입문자 / AI 감별사 / 튜링 심판관</li>
+      </ul>
+      <p class="muted small" id="attemptInfo" style="margin-top:10px"></p>
+      <button class="btn big block" id="start" style="margin-top:6px">도전 시작</button>
+    </div>
+  </section>
+
+  <section id="play" style="display:none">
+    <div class="row between small muted"><span id="qMeta"></span><span id="qNum"></span></div>
+    <div class="progress" style="margin:8px 0 14px"><i id="bar" style="width:0%"></i></div>
+    <div class="q" id="qText"></div>
+    <div class="choices">
+      <button class="choice ai" data-a="ai">🤖 AI</button>
+      <button class="choice human" data-a="human">🧑 사람</button>
+    </div>
+    <div class="card feedback" id="fb" style="display:none">
+      <div class="verdict" id="fbVerdict"></div>
+      <div id="fbWhy" style="margin-top:6px"></div>
+      <div class="muted small" id="fbSrc" style="margin-top:6px"></div>
+      <button class="btn block" id="next" style="margin-top:12px">다음 문제</button>
+    </div>
+  </section>
+
+  <section id="result" style="display:none">
+    <div class="card center">
+      <div class="muted">나의 결과</div>
+      <div class="grade" id="grade"></div>
+      <div id="score" style="font-size:18px"></div>
+      <p class="muted small" id="gradeDesc"></p>
+      <div id="reward" class="notice" style="text-align:left; margin-top:10px"></div>
+      <div class="row" style="justify-content:center; margin-top:14px">
+        <button class="btn" id="retry">재도전</button>
+        <button class="btn ghost" id="bonusBtn">보너스 문제</button>
+      </div>
+    </div>
+    <h2>문제 다시 보기</h2>
+    <ol class="review small" id="review"></ol>
+  </section>
+</main>
+<footer class="foot">세트 선택: <code>?set=sample</code>, 문항은 <code>questions.js</code>에서 관리</footer>
+
+<script src="../../shared/core.js"></script>
+<script src="questions.js"></script>
+<script>
+const CONFIG = { perRound: 10, passScore: 7, maxAttempts: 3 /* 최초 1 + 재도전 2 */ };
+const GRADES = [
+  { min: 8, name: "튜링 심판관 👩‍⚖️", desc: "AI의 말버릇을 꿰뚫어 보는 눈! 앞으로 AI가 당신을 피해 다닐지도." },
+  { min: 5, name: "AI 감별사 🔍", desc: "꽤 날카로워요. 애매한 문장 몇 개에만 속았어요." },
+  { min: 0, name: "AI 입문자 🌱", desc: "요즘 AI가 정말 사람 같죠? 해설을 보고 다시 도전해 보세요!" },
+];
+const S = DFS.store;
+const setName = DFS.qs("set") || "sample";
+const pool = window.AIH_QUESTIONS.filter((q) => q.set === setName);
+document.getElementById("passN").textContent = CONFIG.passScore;
+
+let round = [], idx = 0, answers = [];
+
+function attempts(uid) { return (S.get("aih:attempts", {})[uid] || []); }
+
+function refreshIntro() {
+  const u = DFS.user.get();
+  const el = document.getElementById("attemptInfo");
+  if (!u) { el.textContent = "시작하면 참가자 확인을 먼저 해요."; return; }
+  const used = attempts(u.uid).length;
+  const left = CONFIG.maxAttempts - used;
+  el.textContent = left > 0 ? `${u.nick}님의 남은 도전 기회: ${left}번` : "도전 기회를 모두 사용했어요. 해설은 결과 화면에서 다시 볼 수 있어요.";
+  document.getElementById("start").disabled = left <= 0;
+}
+
+/* AI/사람 비율이 한쪽으로 쏠리지 않게, 쉬움→어려움 순서로 10문제 구성 */
+function buildRound() {
+  const order = { "쉬움": 0, "보통": 1, "어려움": 2 };
+  const ai = DFS.shuffle(pool.filter((q) => q.answer === "ai"));
+  const hu = DFS.shuffle(pool.filter((q) => q.answer === "human"));
+  const nHu = Math.min(hu.length, Math.max(3, Math.round(CONFIG.perRound * (hu.length / pool.length))));
+  const picked = hu.slice(0, nHu).concat(ai.slice(0, CONFIG.perRound - nHu));
+  return DFS.shuffle(picked).sort((a, b) => order[a.level] - order[b.level]);
+}
+
+function show(id) { ["intro", "play", "result"].forEach((s) => document.getElementById(s).style.display = s === id ? "block" : "none"); window.scrollTo(0, 0); }
+
+document.getElementById("start").onclick = async () => {
+  const u = await DFS.user.require({ needNick: true });
+  if (attempts(u.uid).length >= CONFIG.maxAttempts) { refreshIntro(); return DFS.toast("도전 기회를 모두 사용했어요"); }
+  round = buildRound(); idx = 0; answers = [];
+  show("play"); renderQ();
+};
+
+function renderQ() {
+  const q = round[idx];
+  document.getElementById("qMeta").textContent = `${q.level}, ${q.type}`;
+  document.getElementById("qNum").textContent = `${idx + 1} / ${round.length}`;
+  document.getElementById("bar").style.width = (idx / round.length * 100) + "%";
+  document.getElementById("qText").textContent = q.text;
+  document.getElementById("fb").style.display = "none";
+  document.querySelectorAll(".choice").forEach((b) => { b.disabled = false; b.classList.remove("right", "wrong"); });
+}
+
+document.querySelectorAll(".choice").forEach((b) => b.onclick = () => {
+  const q = round[idx];
+  const pick = b.dataset.a;
+  const ok = pick === q.answer;
+  answers.push({ q, pick, ok });
+  document.querySelectorAll(".choice").forEach((x) => {
+    x.disabled = true;
+    if (x.dataset.a === q.answer) x.classList.add("right");
+    else if (x === b) x.classList.add("wrong");
+  });
+  document.getElementById("fbVerdict").innerHTML = (ok ? "⭕ 정답! " : "❌ 아쉬워요. ") + `정답은 <b>${q.answer === "ai" ? "AI" : "사람"}</b>`;
+  document.getElementById("fbWhy").textContent = q.why;
+  document.getElementById("fbSrc").textContent = q.source ? "출처: " + q.source : "";
+  document.getElementById("next").textContent = idx === round.length - 1 ? "결과 보기" : "다음 문제";
+  const fb = document.getElementById("fb"); fb.style.display = "block"; fb.scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+
+document.getElementById("next").onclick = () => {
+  idx++;
+  if (idx < round.length) renderQ(); else finish();
+};
+
+function finish() {
+  const u = DFS.user.get();
+  const score = answers.filter((a) => a.ok).length;
+  S.update("aih:attempts", {}, (m) => { (m[u.uid] = m[u.uid] || []).push({ score, set: setName, at: Date.now() }); return m; });
+  S.push("aih:results", { uid: u.uid, nick: u.nick, score, set: setName, at: Date.now() });
+  const g = GRADES.find((x) => score >= x.min);
+  document.getElementById("grade").textContent = g.name;
+  document.getElementById("score").innerHTML = `<b>${score}</b> / ${round.length} 정답`;
+  document.getElementById("gradeDesc").textContent = g.desc;
+  const left = CONFIG.maxAttempts - attempts(u.uid).length;
+  const rw = document.getElementById("reward");
+  if (score >= CONFIG.passScore) {
+    const got = DFS.freq.award(u.uid, "ai-or-human", "AI일까 사람일까");
+    rw.innerHTML = got ? "🎟️ 프리퀀시 1개가 적립됐어요! 이 화면을 스태프에게 보여주세요." : "🎟️ 이미 프리퀀시를 받았어요. (프로그램당 1개)";
+  } else {
+    rw.innerHTML = `${CONFIG.passScore}개 이상 맞히면 프리퀀시를 드려요. ` + (left > 0 ? `재도전 기회 ${left}번 남았어요!` : "도전 기회를 모두 사용했어요.");
+  }
+  DFS.renderWho();
+  const rb = document.getElementById("retry");
+  rb.disabled = left <= 0; rb.textContent = left > 0 ? `재도전 (${left}번 남음)` : "재도전 불가";
+  document.getElementById("review").innerHTML = answers.map((a) => `
+    <li><span class="tag ${a.ok ? "green" : "red"}">${a.ok ? "정답" : "오답"}</span> <span class="tag">${a.q.answer === "ai" ? "AI" : "사람"}</span>
+      <div style="margin-top:4px">${DFS.esc(a.q.text).replace(/\n/g, " / ")}</div>
+      <div class="muted">${DFS.esc(a.q.why)}${a.q.source ? ", " + DFS.esc(a.q.source) : ""}</div></li>`).join("");
+  show("result");
+}
+
+document.getElementById("retry").onclick = () => { show("intro"); refreshIntro(); };
+document.getElementById("bonusBtn").onclick = (e) => {
+  const b = window.AIH_BONUS;
+  const box = document.createElement("div");
+  box.className = "card pop"; box.style.marginTop = "12px"; box.style.textAlign = "left";
+  box.innerHTML = `<b>보너스, 이 퀴즈</b><div class="q" style="margin-top:8px;min-height:80px">${DFS.esc(b.text)}</div>
+    <div class="choices"><button class="choice ai" data-b="ai">🤖 AI</button><button class="choice human" data-b="human">🧑 사람</button></div>
+    <div class="muted" data-out style="margin-top:10px"></div>`;
+  e.target.closest(".card").appendChild(box);
+  e.target.disabled = true;
+  box.querySelectorAll("[data-b]").forEach((btn) => btn.onclick = () => {
+    box.querySelector("[data-out]").textContent = (btn.dataset.b === b.answer ? "⭕ 정답! " : "❌ 땡! ") + b.why;
+    box.querySelectorAll("[data-b]").forEach((x) => { x.disabled = true; if (x.dataset.b === b.answer) x.classList.add("right"); });
+  });
+};
+
+refreshIntro();
+</script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DevFest Seoul 2026, 쉬는 시간 프로그램</title>
+<link rel="stylesheet" href="shared/style.css" />
+<style>
+  .hero { padding: 28px 0 8px; }
+  .hero h1 { font-size: 32px; }
+  .prog { display: flex; flex-direction: column; text-decoration: none; color: inherit; transition: transform .12s, border-color .12s; }
+  .prog:hover { transform: translateY(-2px); border-color: var(--blue); }
+  .prog .em { font-size: 34px; }
+  .prog h3 { margin: 8px 0 4px; font-size: 17px; }
+  .prog p { margin: 0; color: var(--muted); font-size: 14px; flex: 1; }
+  .prog .meta { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .final { border-color: rgba(52,168,83,.6); }
+</style>
+</head>
+<body>
+<div data-topbar data-depth=""></div>
+<main class="wrap wide">
+  <section class="hero">
+    <span class="brand-dots"><i></i><i></i><i></i><i></i></span><span class="muted">GDG Seoul, DevFest Seoul 2026</span>
+    <h1>쉬는 시간 프로그램 샘플</h1>
+    <p class="lead">세션과 핸즈온 사이, 참가자가 자기 속도로 즐기고 서로 이야기 나눌 수 있는 프로그램 모음이에요.
+      운영팀 스레드에서 나온 아이디어를 바로 체험할 수 있는 웹 샘플로 만들었습니다.</p>
+  </section>
+
+  <div class="grid two">
+    <div class="card" id="myStamps">
+      <h3>🎟️ 내 프리퀀시</h3>
+      <p class="muted small" id="stampTxt"></p>
+      <div class="stamps" id="stamps"></div>
+    </div>
+    <div class="card">
+      <h3>📍 공간 배치 (11/12 확정)</h3>
+      <ul class="small" style="padding-left:18px;margin:6px 0">
+        <li><b>바이브라운지</b>, BUILD ROULETTE</li>
+        <li><b>복도 공간</b>, AI일까 사람일까, 2026 Bug Museum</li>
+      </ul>
+      <p class="muted small" style="margin:0">모니터 없이 참가자 모바일로 참여할 수 있는 형태를 우선했어요. 각 앱의 <code>?screen=1</code>은 모니터가 있을 때 쓰는 보조 화면입니다.</p>
+    </div>
+  </div>
+
+  <h2>✅ 최종 확정 프로그램</h2>
+  <div class="grid two" id="final"></div>
+
+  <h2>🧪 후보 아이디어 샘플</h2>
+  <p class="muted small" style="margin-top:-4px">스레드에서 제안된 나머지 아이디어도 바로 써볼 수 있게 만들었어요. 추후 추가 프로그램이나 다른 행사에 재활용할 수 있어요.</p>
+  <div class="grid two" id="others"></div>
+
+  <h2>🛠️ 운영 도구</h2>
+  <div class="card small">
+    <div class="row" style="gap:14px">
+      <a href="apps/build-roulette/?screen=1">룰렛 모니터</a>
+      <a href="apps/bug-museum/?screen=1">박물관 모니터</a>
+      <a href="apps/merge-conflict/?screen=1">투표 모니터</a>
+      <a href="apps/bug-museum/?admin=1">박물관 검수(숨김)</a>
+      <a href="apps/build-roulette/?admin=1">룰렛 검수(숨김)</a>
+      <a href="apps/bug-patch-exchange/?admin=1">고민 게시판 검수</a>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn ghost sm" id="logout">참가자 전환</button>
+      <button class="btn ghost sm" id="reset">샘플 데이터 초기화</button>
+    </div>
+    <p class="muted" style="margin:10px 0 0">샘플은 이 브라우저(localStorage)에만 저장돼요. 실제 행사에서는 <code>shared/core.js</code>의 store를 Firebase로 교체하면 여러 기기에서 공유됩니다.</p>
+  </div>
+</main>
+<footer class="foot">GDG Seoul DevFest 2026 운영팀, 샘플 v0.1</footer>
+<script src="shared/core.js"></script>
+<script>
+const PROGRAMS = [
+  { final: true, path: "apps/build-roulette/", em: "🎰", name: "BUILD ROULETTE", desc: "룰렛으로 정해진 대상, 문제, 제약조건에 맞춰 엉뚱한 서비스 아이디어를 기획", tags: [["바이브라운지", "blue"], ["1~2분", ""]], by: "김서연", src: "build-roulette" },
+  { final: true, path: "apps/ai-or-human/", em: "🤖", name: "AI일까 사람일까", desc: "글, 커밋 메시지, 코드 주석이 AI 작품인지 사람 작품인지 맞히는 10문제 퀴즈", tags: [["복도", "green"], ["1~2분", ""]], by: "공병승", src: "ai-or-human" },
+  { final: true, path: "apps/bug-museum/", em: "🏛️", name: "2026 Bug Museum", desc: "올해 겪은 황당한 버그를 전시하고 공감되는 사연에 투표하는 흑역사 박물관", tags: [["복도", "green"], ["전시형", ""]], by: "김서연", src: "bug-museum" },
+  { path: "apps/ai-vault/", em: "🔐", name: "AI 금고 털기", desc: "비밀번호를 지키는 AI를 대화로 꼬드기는 3단계 프롬프트 인젝션 게임", tags: [["부스", "red"], ["3~5분", ""]], by: "공병승", src: "ai-vault" },
+  { path: "apps/bug-patch-exchange/", em: "🛠️", name: "Bug & Patch Exchange", desc: "고민을 Issue로 올리면 다른 참가자가 Patch로 조언을 남기는 고민 교환소", tags: [["게시판", "green"]], by: "김서연", src: "bug-patch" },
+  { path: "apps/merge-conflict/", em: "⚔️", name: "MERGE CONFLICT", desc: "금요일 5시 배포 가능? 정답 없는 개발 논쟁 실시간 밸런스 투표", tags: [["투표", "red"]], by: "김서연", src: "merge-conflict" },
+  { path: "apps/worst-ux/", em: "⏰", name: "WORST UX EVER", desc: "일부러 불편하게 만든 쇼핑몰에서 미션을 가장 빨리 끝내는 타임어택", tags: [["타임어택", "yellow"]], by: "김서연", src: "worst-ux" },
+  { path: "apps/bug-hunters/", em: "🐛", name: "BUG HUNTERS", desc: "평범해 보이는 쇼핑몰에 숨은 버그를 찾아 신고하면 자동 채점", tags: [["챌린지", "red"], ["4분", ""]], by: "김서연", src: "bug-hunters" },
+  { path: "apps/rhythm-challenge/", em: "🥁", name: "크리스마스 리듬 챌린지", desc: "박자에 맞춰 공개되는 그림 카드 8장의 이름을 말하는 3단계 리듬 게임", tags: [["진행 요원 1명", ""]], by: "SysCore Lab. Park", src: "rhythm" },
+  { path: "apps/field-kit/", em: "🧰", name: "현장 도우미", desc: "릴레이 그림 제시어, 컬러 헌트 미션, 바이브라운지 3-Prompt/릴레이 코딩 타이머", tags: [["운영 도구", ""]], by: "SysCore Lab. Park, 남두현", src: "color-hunt" },
+];
+
+function card(p) {
+  return `<a class="card prog ${p.final ? "final" : ""}" href="${p.path}">
+    <div class="em">${p.em}</div><h3>${p.name}</h3><p>${p.desc}</p>
+    <div class="meta">${p.final ? `<span class="tag green">확정</span>` : ""}${p.tags.map(([t, c]) => `<span class="tag ${c}">${t}</span>`).join("")}<span class="tag">제안 ${p.by}</span></div></a>`;
+}
+document.getElementById("final").innerHTML = PROGRAMS.filter((p) => p.final).map(card).join("");
+document.getElementById("others").innerHTML = PROGRAMS.filter((p) => !p.final).map(card).join("");
+
+function renderStamps() {
+  const u = DFS.user.get();
+  const mine = u ? DFS.freq.list(u.uid) : {};
+  const srcs = ["build-roulette", "ai-or-human", "bug-museum", "ai-vault", "bug-patch", "merge-conflict", "worst-ux", "bug-hunters", "rhythm", "color-hunt"];
+  const em = Object.fromEntries(PROGRAMS.map((p) => [p.src, p.em]));
+  document.getElementById("stamps").innerHTML = srcs.map((s) => `<div class="stamp ${mine[s] ? "on" : ""}" title="${s}">${mine[s] ? em[s] : ", "}</div>`).join("");
+  document.getElementById("stampTxt").textContent = u ? `${u.nick}님, ${Object.keys(mine).length}개 적립 (프로그램당 1개)` : "프로그램에 참여하면 프로그램당 1개씩 적립돼요. 지급 방식(웹 자동 적립 / 실물 도장)은 운영팀 확정 전 샘플이에요.";
+}
+document.getElementById("logout").onclick = () => { DFS.user.logout(); location.reload(); };
+document.getElementById("reset").onclick = () => {
+  if (!document.getElementById("reset").dataset.armed) { document.getElementById("reset").dataset.armed = "1"; document.getElementById("reset").textContent = "한 번 더 누르면 초기화"; return; }
+  DFS.store.keys().forEach((k) => DFS.store.remove(k)); location.reload();
+};
+renderStamps();
+</script>
+</body>
+</html>

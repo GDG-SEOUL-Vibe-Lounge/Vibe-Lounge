@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2026 Bug Museum, 올해의 버그 박물관</title>
+<link rel="stylesheet" href="../../shared/style.css" />
+<style>
+  .museum-hero { border: 1px solid var(--line); border-radius: 20px; padding: 24px 20px; background: radial-gradient(120% 120% at 0% 0%, rgba(251,188,4,.18), transparent 60%), var(--card); }
+  .museum-hero h1 { font-size: 30px; }
+  .exhibit { position: relative; }
+  .exhibit .plate { font-size: 12px; color: var(--muted); letter-spacing: .02em; }
+  .exhibit h3 { font-size: 18px; margin: 6px 0 8px; }
+  .exhibit .story { white-space: pre-wrap; font-size: 15px; }
+  .reacts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .reacts button { background: var(--card-2); border: 1px solid var(--line); color: var(--text); border-radius: 999px; padding: 5px 10px; font: inherit; font-size: 14px; cursor: pointer; }
+  .reacts button.on { border-color: var(--yellow); background: rgba(251,188,4,.16); }
+  .reviews { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 10px; }
+  .reviews .rv { font-size: 14px; margin-bottom: 6px; }
+  .reviews .rv b { margin-right: 6px; }
+  .hidden-ex { opacity: .35; }
+  .rank { counter-reset: r; }
+  .rank li { list-style: none; display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .rank li::before { counter-increment: r; content: counter(r); width: 28px; height: 28px; border-radius: 50%; background: var(--card-2); display: flex; align-items: center; justify-content: center; font-weight: 800; flex: none; }
+  .rank li:nth-child(1)::before { background: var(--yellow); color: #222; }
+  .rank li:nth-child(2)::before { background: #c0c7d6; color: #222; }
+  .rank li:nth-child(3)::before { background: #c58a52; color: #222; }
+  body.screen .topbar, body.screen .player-only { display: none !important; }
+  body.screen .wrap { max-width: 1500px; }
+  body.screen .screen-grid { display: grid !important; grid-template-columns: 2fr 1fr; gap: 20px; }
+  body.screen .exhibit h3 { font-size: 34px; }
+  body.screen .exhibit .story { font-size: 24px; }
+</style>
+</head>
+<body>
+<div data-topbar></div>
+<main class="wrap">
+  <section class="museum-hero player-only">
+    <span class="tag yellow">복도 공간, 전시형</span>
+    <h1>🏛️ 2026 Bug Museum</h1>
+    <p class="lead" style="margin-bottom:0">한 해 동안 겪었던 황당한 버그와 실수를 모아 만든 <b>개발자들의 흑역사 박물관</b>.
+      자유롭게 관람하고, 공감되는 사연에 ❤️와 관람평을 남겨주세요. 2026년의 버그를 함께 떠나보내요!</p>
+  </section>
+
+  <div class="tabs player-only" id="tabs" style="margin-top:16px">
+    <button data-t="gallery" class="on">전시관</button>
+    <button data-t="submit">사연 제보</button>
+    <button data-t="rank">올해의 버그 🏆</button>
+  </div>
+
+  <!-- 전시관 -->
+  <section id="t-gallery">
+    <div class="row between player-only" style="margin:14px 0 8px">
+      <div class="tabs" id="cats"></div>
+      <select id="sort" style="width:auto"><option value="hot">❤️ 많은 순</option><option value="new">최신 순</option></select>
+    </div>
+    <div class="grid two" id="gallery"></div>
+  </section>
+
+  <!-- 제보 -->
+  <section id="t-submit" style="display:none">
+    <div class="card" style="margin-top:14px">
+      <h3>버그 사연 제보하기</h3>
+      <p class="muted small">1인당 최대 <b>2개</b>까지 제보할 수 있어요. 제출 즉시 전시되며, 작성자는 닉네임으로 표시돼요.</p>
+      <div class="notice">⚠️ 회사 내부 정보, 고객 정보, 실명 등 <b>개인정보, 사내 정보는 적지 말아주세요.</b> 문제가 되는 사연은 운영진이 숨김 처리할 수 있어요.</div>
+      <label>전시 카테고리</label>
+      <select id="cat"></select>
+      <label>사연 제목</label>
+      <input type="text" id="title" maxlength="40" placeholder="예: 3시간 디버깅의 범인은 세미콜론" />
+      <label>사연</label>
+      <textarea id="story" maxlength="600" placeholder="언제, 무엇이, 어떻게 터졌고, 범인은 누구였나요?"></textarea>
+      <div class="row between" style="margin-top:12px">
+        <span class="muted small" id="quota"></span>
+        <button class="btn green" id="send">전시하기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 랭킹 -->
+  <section id="t-rank" style="display:none">
+    <div class="card" style="margin-top:14px">
+      <h3>🏆 올해의 버그 순위</h3>
+      <p class="muted small">별도 투표 없이 ❤️ 수로 집계해요. 행사 종료 전 1위 사연을 '올해의 버그'로 선정해 시상합니다.</p>
+      <ol class="rank" id="rank" style="padding:0; margin:8px 0 0"></ol>
+    </div>
+  </section>
+
+  <!-- 모니터 모드 -->
+  <section class="screen-grid" style="display:none" id="screenGrid">
+    <div class="card exhibit" id="spot"></div>
+    <div class="card"><h3>🏆 올해의 버그 TOP 5</h3><ol class="rank" id="rank2" style="padding:0"></ol></div>
+  </section>
+</main>
+<footer class="foot player-only">모니터 화면: <a href="?screen=1">?screen=1</a>, 운영진 검수: <a href="?admin=1">?admin=1</a></footer>
+
+<script src="../../shared/core.js"></script>
+<script>
+const CATS = [
+  { id: "absurd", label: "어이없는 버그", emoji: "🤦", desc: "3시간 디버깅했는데 오타 하나 때문이었던 사건" },
+  { id: "mystery", label: "올해의 미스터리", emoji: "👻", desc: "분명 오류가 났는데 아무것도 안 했더니 해결된 사건" },
+  { id: "disaster", label: "올해의 대참사", emoji: "🔥", desc: "사소한 실수가 예상보다 큰 문제로 이어진 사건" },
+  { id: "legacy", label: "올해의 유산", emoji: "🏺", desc: "고치고 싶지만 아무도 건드리지 못하는 레거시 코드" },
+];
+const REACTS = [["lol", "😂"], ["same", "🙋 나도"], ["pain", "🫠"], ["scary", "😱"], ["rip", "🪦"]];
+const MAX_PER_USER = 2;
+const S = DFS.store;
+const admin = DFS.qs("admin") === "1";
+const screen = DFS.qs("screen") === "1";
+let curCat = "all";
+
+/* 예시 사연 (샘플 화면용, 실제 운영 시 삭제) */
+if (!S.get("museum:seeded", false)) {
+  const now = Date.now();
+  S.set("museum:items", [
+    { id: DFS.id("b_"), cat: "absurd", title: "[예시] 범인은 전각 공백", story: "빌드가 계속 깨져서 오후 내내 의존성을 갈아엎었는데, 복붙한 설정 파일에 눈에 안 보이는 전각 공백이 하나 있었다.", nick: "예시봇", uid: "SEED", likes: ["A", "B", "C"], reacts: { same: ["A", "B"] }, reviews: [{ nick: "관람객1", text: "아 이거 진짜 무서움", at: now - 3e5 }], hidden: false, at: now - 7.2e6 },
+    { id: DFS.id("b_"), cat: "mystery", title: "[예시] 재부팅의 신", story: "테스트 서버에서만 나던 에러가, 원인을 찾으려고 로그를 켜자마자 사라졌다. 로그를 끄면 다시 나타난다.", nick: "예시봇", uid: "SEED", likes: ["A"], reacts: { scary: ["A"] }, reviews: [], hidden: false, at: now - 3.6e6 },
+    { id: DFS.id("b_"), cat: "legacy", title: "[예시] 건드리지 마시오", story: "주석에 '이 줄 지우면 결제 안 됨. 이유는 모름'이라고 써 있다. 아무도 지우지 않는다.", nick: "예시봇", uid: "SEED", likes: [], reacts: {}, reviews: [], hidden: false, at: now - 1.8e6 },
+  ]);
+  S.set("museum:seeded", true);
+}
+
+function items() { return S.get("museum:items", []); }
+function save(fn) { S.update("museum:items", [], fn); render(); }
+function catOf(id) { return CATS.find((c) => c.id === id) || { label: "기타", emoji: "🐛" }; }
+
+/* 탭 */
+document.querySelectorAll("#tabs button").forEach((b) => b.onclick = () => {
+  document.querySelectorAll("#tabs button").forEach((x) => x.classList.toggle("on", x === b));
+  ["gallery", "submit", "rank"].forEach((t) => document.getElementById("t-" + t).style.display = t === b.dataset.t ? "block" : "none");
+  if (b.dataset.t === "submit") refreshQuota();
+});
+
+document.getElementById("cats").innerHTML = `<button data-c="all" class="on">전체</button>` + CATS.map((c) => `<button data-c="${c.id}">${c.emoji} ${c.label}</button>`).join("");
+document.querySelectorAll("#cats button").forEach((b) => b.onclick = () => {
+  document.querySelectorAll("#cats button").forEach((x) => x.classList.toggle("on", x === b));
+  curCat = b.dataset.c; render();
+});
+document.getElementById("sort").onchange = render;
+document.getElementById("cat").innerHTML = CATS.map((c) => `<option value="${c.id}">${c.emoji} ${c.label} — ${c.desc}</option>`).join("");
+
+function refreshQuota() {
+  const u = DFS.user.get();
+  const used = u ? items().filter((x) => x.uid === u.uid).length : 0;
+  document.getElementById("quota").textContent = u ? `제보 ${used} / ${MAX_PER_USER}` : "제출할 때 참가자 확인을 해요";
+  document.getElementById("send").disabled = used >= MAX_PER_USER;
+}
+
+document.getElementById("send").onclick = async () => {
+  const title = document.getElementById("title").value.trim();
+  const story = document.getElementById("story").value.trim();
+  if (!title || story.length < 10) return DFS.toast("제목과 사연(10자 이상)을 적어주세요");
+  const u = await DFS.user.require({ needNick: true });
+  if (items().filter((x) => x.uid === u.uid).length >= MAX_PER_USER) { refreshQuota(); return DFS.toast("1인당 최대 2개까지 제보할 수 있어요"); }
+  save((arr) => (arr.push({ id: DFS.id("b_"), cat: document.getElementById("cat").value, title, story, nick: u.nick, uid: u.uid, likes: [], reacts: {}, reviews: [], hidden: false, at: Date.now() }), arr));
+  // 사연 여러 개를 내도 프리퀀시는 최초 1회만
+  DFS.freq.award(u.uid, "bug-museum", "2026 Bug Museum");
+  DFS.renderWho();
+  document.getElementById("title").value = ""; document.getElementById("story").value = "";
+  refreshQuota();
+  DFS.toast("전시관에 걸렸어요! 🖼️");
+  document.querySelector('#tabs button[data-t="gallery"]').click();
+};
+
+function exhibitHTML(x, big) {
+  const u = DFS.user.get();
+  const c = catOf(x.cat);
+  const liked = u && x.likes.includes(u.uid);
+  return `<div class="card exhibit ${x.hidden ? "hidden-ex" : ""}" data-id="${x.id}">
+    <div class="plate">${c.emoji} ${c.label}, 제보 ${DFS.esc(x.nick)}, ${DFS.timeAgo(x.at)}</div>
+    <h3>${DFS.esc(x.title)}</h3>
+    <div class="story">${DFS.esc(x.story)}</div>
+    ${big ? `<div class="muted" style="margin-top:12px">❤️ ${x.likes.length}, 관람평 ${x.reviews.length}</div>` : `
+    <div class="reacts">
+      <button class="${liked ? "on" : ""}" data-like>❤️ ${x.likes.length}</button>
+      ${REACTS.map(([k, e]) => { const arr = x.reacts[k] || []; return `<button class="${u && arr.includes(u.uid) ? "on" : ""}" data-react="${k}">${e} ${arr.length || ""}</button>`; }).join("")}
+      ${admin ? `<button data-hide>${x.hidden ? "👁 다시 공개" : "🙈 숨김"}</button>` : ""}
+    </div>
+    <div class="reviews">
+      ${x.reviews.slice(-3).map((r) => `<div class="rv"><b>${DFS.esc(r.nick)}</b>${DFS.esc(r.text)}</div>`).join("")}
+      ${x.reviews.length > 3 ? `<div class="muted small">관람평 ${x.reviews.length - 3}개 더 있음</div>` : ""}
+      <div class="row" style="margin-top:6px"><input type="text" maxlength="60" placeholder="관람평 남기기 (나도 비슷한 경험이…)" style="flex:1; padding:8px 10px" data-rvin /><button class="btn sm" data-rv>등록</button></div>
+    </div>`}
+  </div>`;
+}
+
+function sorted(list) {
+  const mode = document.getElementById("sort").value;
+  return list.slice().sort((a, b) => mode === "hot" ? (b.likes.length - a.likes.length) || (b.at - a.at) : b.at - a.at);
+}
+
+function render() {
+  let list = items();
+  if (!admin) list = list.filter((x) => !x.hidden);
+  const shown = sorted(curCat === "all" ? list : list.filter((x) => x.cat === curCat));
+  const g = document.getElementById("gallery");
+  g.innerHTML = shown.length ? shown.map((x) => exhibitHTML(x)).join("") : `<p class="muted">이 전시실은 아직 비어 있어요.</p>`;
+  g.querySelectorAll(".exhibit").forEach((el) => {
+    const id = el.dataset.id;
+    const mutate = (fn) => save((arr) => arr.map((x) => (x.id === id ? fn(x) : x)));
+    const toggle = (arr, v) => (arr.includes(v) ? arr.filter((a) => a !== v) : arr.concat(v));
+    el.querySelector("[data-like]").onclick = async () => { const u = await DFS.user.require({ needNick: true }); mutate((x) => (x.likes = toggle(x.likes, u.uid), x)); };
+    el.querySelectorAll("[data-react]").forEach((b) => b.onclick = async () => { const u = await DFS.user.require({ needNick: true }); mutate((x) => (x.reacts[b.dataset.react] = toggle(x.reacts[b.dataset.react] || [], u.uid), x)); });
+    const hide = el.querySelector("[data-hide]"); if (hide) hide.onclick = () => mutate((x) => (x.hidden = !x.hidden, x));
+    el.querySelector("[data-rv]").onclick = async () => {
+      const inp = el.querySelector("[data-rvin]"); const t = inp.value.trim(); if (!t) return;
+      const u = await DFS.user.require({ needNick: true });
+      mutate((x) => (x.reviews.push({ nick: u.nick, text: t, at: Date.now() }), x));
+    };
+  });
+  const top = list.slice().sort((a, b) => (b.likes.length - a.likes.length) || (a.at - b.at));
+  const rankHTML = (n) => top.slice(0, n).map((x) => `<li><div><b>${DFS.esc(x.title)}</b><div class="muted small">${catOf(x.cat).emoji} ${catOf(x.cat).label}, ${DFS.esc(x.nick)}, ❤️ ${x.likes.length}</div></div></li>`).join("") || `<p class="muted">아직 사연이 없어요.</p>`;
+  document.getElementById("rank").innerHTML = rankHTML(20);
+  document.getElementById("rank2").innerHTML = rankHTML(5);
+}
+
+function renderSpot() {
+  const list = items().filter((x) => !x.hidden);
+  document.getElementById("spot").outerHTML = list.length ? exhibitHTML(DFS.pick(list), true).replace('class="card exhibit', 'id="spot" class="card exhibit pop') : `<div id="spot" class="card"><h3>🏛️ 2026 Bug Museum</h3><p>QR로 접속해 올해의 버그를 제보해 주세요!</p></div>`;
+}
+
+if (screen) {
+  document.body.classList.add("screen");
+  document.getElementById("t-gallery").style.display = "none";
+  renderSpot(); setInterval(renderSpot, 8000);
+}
+S.on("museum:items", render);
+render();
+</script>
+</body>
+</html>
