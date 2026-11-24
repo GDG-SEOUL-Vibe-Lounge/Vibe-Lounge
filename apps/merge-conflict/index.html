@@ -41,6 +41,7 @@
   <section id="screen" style="display:none"></section>
 </main>
 <footer class="foot player">모니터 화면: <a href="index.html?screen=1">?screen=1</a></footer>
+<script src="../../shared/firebase-config.js"></script>
 <script src="../../shared/core.js"></script>
 <script>if(!window.DFS){document.body.insertAdjacentHTML("afterbegin",'<div style="background:#ea4335;color:#fff;padding:14px;font-weight:700">⚠️ 공용 스크립트(shared/core.js)를 불러오지 못했어요. HTML 파일만 따로 받지 말고 저장소 전체(ZIP)를 받아 폴더 구조 그대로 열어주세요.</div>')}</script>
 <script>
@@ -118,7 +119,7 @@ if (DFS.qs("screen") === "1") {
   document.getElementById("screen").style.display = "block";
   renderScreen(); setInterval(renderScreen, 6000);
 }
-S.on("mc:votes", render);
+S.on("mc:votes", () => { render(); if (DFS.qs("screen") === "1") { si = Math.max(0, si - 1); renderScreen(); } });
 render();
 </script>
 </body>
