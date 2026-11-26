@@ -2,14 +2,20 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // DevFest Seoul 2026 쉬는 시간 프로그램: 키(key)별 문서 1개, 값은 JSON 문자열(v)
+    // 허용 키는 shared/core.js 의 schemas 목록과 같아요. 새 프로그램을 추가하면 두 곳 모두 고치세요.
+    function isKnownKey(key) {
+      return key in ['roulette:ideas', 'museum:items', 'bpx:issues', 'mc:votes', 'wux:records',
+                     'bh:records', 'rhythm:records', 'aih:attempts', 'aih:results', 'vault:champions', 'freq'];
+    }
     match /dfs26/{key} {
-      allow read: if true;
-      allow create, update: if key.matches('^[a-z0-9:_-]{1,40}$')
+      allow read: if isKnownKey(key);
+      allow create, update: if isKnownKey(key)
         && request.resource.data.keys().hasOnly(['v', 'at'])
         && request.resource.data.v is string
         && request.resource.data.v.size() < 900000
         && request.resource.data.at is number;
       allow delete: if false;
     }
+    // 주의: 로그인 없이 누구나 쓸 수 있는 구조라서 내용 훼손(덮어쓰기)까지 막지는 못해요. docs/deploy.md 의 '보안 메모' 참고.
   }
 }
