@@ -9,6 +9,7 @@
  * 이 값들은 공개되어도 되는 웹 클라이언트 설정입니다. 접근 제어는 firestore.rules로 합니다.
  */
 window.DFS_FIREBASE = null;
+
 /* 예시:
 window.DFS_FIREBASE = {
   apiKey: "AIza...",
@@ -19,3 +20,9 @@ window.DFS_FIREBASE = {
   appId: "1:000000000000:web:xxxxxxxxxxxx",
 };
 */
+
+/*
+ * DevFest 메인 사이트 주소: 상단 로고, '내 QR 열기' 버튼, 허브의 키 비주얼이 여기를 가리켜요.
+ * 지정하지 않으면 https://devfest-seoul-2026.vercel.app 를 씁니다. (연동 방식: docs/main-site-integration.md)
+ */
+// window.DFS_MAIN_URL = "https://devfest-seoul-2026.vercel.app";
