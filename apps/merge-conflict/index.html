@@ -40,7 +40,6 @@
   </section>
   <section id="screen" style="display:none"></section>
 </main>
-<footer class="foot player">모니터 화면: <a href="index.html?screen=1">?screen=1</a></footer>
 <script src="../../shared/firebase-config.js"></script>
 <script src="../../shared/core.js"></script>
 <script>if(!window.DFS){document.body.insertAdjacentHTML("afterbegin",'<div style="background:#ea4335;color:#fff;padding:14px;font-weight:700">⚠️ 공용 스크립트(shared/core.js)를 불러오지 못했어요. HTML 파일만 따로 받지 말고 저장소 전체(ZIP)를 받아 폴더 구조 그대로 열어주세요.</div>')}</script>
@@ -57,7 +56,7 @@ const QUESTIONS = [
   { id: "meeting", q: "데일리 스탠드업은", a: "매일 해야 한다", b: "비동기 텍스트면 충분하다" },
   { id: "ide", q: "코딩할 때 이어폰은", a: "노래 들으며 집중", b: "무음이 최고" },
 ];
-const GOAL = 5; // 이 개수 이상 투표하면 빙고 칸/프리퀀시
+const GOAL = 5; // 이 개수 이상 투표하면 완료 인증(도장)
 const S = DFS.store;
 const votes = () => S.get("mc:votes", {}); // { qid: { uid: "a"|"b" } }
 
@@ -71,7 +70,7 @@ function render() {
   const u = DFS.user.get();
   const v = votes();
   const done = u ? QUESTIONS.filter((q) => v[q.id] && v[q.id][u.uid]).length : 0;
-  document.getElementById("goalTxt").textContent = `${GOAL}개 이상 투표하면 빙고 칸(프리퀀시)을 드려요!`;
+  document.getElementById("goalTxt").textContent = `${GOAL}개 이상 투표하면 스탬프판 도장을 받을 수 있어요!`;
   document.getElementById("prog").style.width = Math.min(100, done / GOAL * 100) + "%";
   document.getElementById("progTxt").textContent = `${done} / ${QUESTIONS.length}개 투표 완료`;
   document.getElementById("qs").innerHTML = QUESTIONS.map((q) => {
@@ -80,9 +79,9 @@ function render() {
     return `<div class="card" style="margin-top:12px">
       <div class="conflict">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</div>
       <h3 style="margin:4px 0 2px">${DFS.esc(q.q)}</h3>
-      <button class="opt a ${mine === "a" ? "mine" : ""}" data-q="${q.id}" data-v="a">${mine ? `<i class="fill" style="width:${t.pa}%"></i>` : ""}<span><span class="lbl" style="color:#81c995">MERGE</span> ${DFS.esc(q.a)}</span>${mine ? `<span class="pct">${t.pa}%</span>` : ""}</button>
+      <button class="opt a ${mine === "a" ? "mine" : ""}" data-q="${q.id}" data-v="a">${mine ? `<i class="fill" style="width:${t.pa}%"></i>` : ""}<span><span class="lbl" style="color:#1f7a45">MERGE</span> ${DFS.esc(q.a)}</span>${mine ? `<span class="pct">${t.pa}%</span>` : ""}</button>
       <div class="conflict" style="margin-top:6px">=======</div>
-      <button class="opt b ${mine === "b" ? "mine" : ""}" data-q="${q.id}" data-v="b">${mine ? `<i class="fill" style="width:${100 - t.pa}%"></i>` : ""}<span><span class="lbl" style="color:#f28b82">REJECT</span> ${DFS.esc(q.b)}</span>${mine ? `<span class="pct">${100 - t.pa}%</span>` : ""}</button>
+      <button class="opt b ${mine === "b" ? "mine" : ""}" data-q="${q.id}" data-v="b">${mine ? `<i class="fill" style="width:${100 - t.pa}%"></i>` : ""}<span><span class="lbl" style="color:#b3362b">REJECT</span> ${DFS.esc(q.b)}</span>${mine ? `<span class="pct">${100 - t.pa}%</span>` : ""}</button>
       <div class="conflict" style="margin-top:6px">&gt;&gt;&gt;&gt;&gt;&gt;&gt; ${mine ? t.n + "명 참여" : "투표하면 결과 공개"}</div>
     </div>`;
   }).join("");
