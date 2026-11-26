@@ -13,9 +13,9 @@
   .reel .v { font-size: 18px; font-weight: 700; line-height: 1.4; margin: 8px 0; transition: opacity .1s; }
   .reel.spinning .v { opacity: .55; filter: blur(.6px); }
   .reel.done { animation: pop .35s ease; }
-  .reel:nth-child(1) { border-color: rgba(66,133,244,.6); } .reel:nth-child(1) .k { color: #8ab4f8; }
-  .reel:nth-child(2) { border-color: rgba(234,67,53,.6); } .reel:nth-child(2) .k { color: #f28b82; }
-  .reel:nth-child(3) { border-color: rgba(251,188,4,.6); } .reel:nth-child(3) .k { color: #fdd663; }
+  .reel:nth-child(1) { border-color: rgba(66,133,244,.6); } .reel:nth-child(1) .k { color: #3a66a8; }
+  .reel:nth-child(2) { border-color: rgba(234,67,53,.6); } .reel:nth-child(2) .k { color: #b3362b; }
+  .reel:nth-child(3) { border-color: rgba(251,188,4,.6); } .reel:nth-child(3) .k { color: #8a5200; }
   .reel .reroll { position: absolute; top: 10px; right: 10px; }
   .idea { position: relative; }
   .idea .name { font-size: 18px; font-weight: 800; }
@@ -78,7 +78,6 @@
     <div class="spot" id="spot"></div>
   </section>
 </main>
-<footer class="foot player">모니터 화면: <a href="index.html?screen=1">?screen=1</a>, 운영진 숨김 처리: <a href="index.html?admin=1">?admin=1</a></footer>
 
 <script src="../../shared/firebase-config.js"></script>
 <script src="../../shared/core.js"></script>
@@ -119,7 +118,7 @@ function renderReels() {
   reelsEl.innerHTML = REELS.map((r, i) => `
     <div class="reel" id="reel${i}">
       <div class="k">${r.k}</div>
-      <div class="v">${result[i] ? DFS.esc(result[i]) : "❔"}</div>
+      <div class="v">${result[i] ? DFS.esc(result[i]) : `<span class="muted">?</span>`}</div>
       ${result[i] && !rerolled[i] ? `<button class="btn ghost sm reroll" data-i="${i}">↻ 다시</button>` : ""}
     </div>`).join("");
   reelsEl.querySelectorAll(".reroll").forEach((b) => b.onclick = () => {

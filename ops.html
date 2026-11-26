@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>운영진용 페이지, DevFest Seoul 2026 쉬는 시간 프로그램</title>
+<link rel="stylesheet" href="shared/style.css" />
+<style>
+  .prog { display: flex; flex-direction: column; text-decoration: none; color: inherit; transition: transform .12s, border-color .12s; }
+  .prog:hover { transform: translateY(-2px); border-color: var(--blue); }
+  .prog .em { font-size: 30px; }
+  .prog h3 { margin: 6px 0 4px; font-size: 16px; }
+  .prog p { margin: 0; color: var(--muted); font-size: 13px; flex: 1; }
+  .prog .meta { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .links { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px; }
+  .links a { display: block; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--text); font-weight: 700; background: #fff; }
+  .links a small { display: block; font-weight: 400; color: var(--muted); }
+</style>
+</head>
+<body>
+<div data-topbar data-depth=""></div>
+<main class="wrap wide">
+  <span class="tag red">운영진용</span>
+  <h1>운영진용 페이지</h1>
+  <p class="lead">모니터 화면, 검수(숨김), QR 안내판, 후보 프로그램 샘플을 모아 둔 곳이에요.</p>
+  <div class="notice">이 페이지 주소는 참가자에게 공유하지 마세요. 검수(숨김) 화면은 별도 로그인이 없어서 주소를 아는 사람은 누구나 쓸 수 있어요.</div>
+
+  <div class="grid two" style="margin-top:14px">
+    <div class="card">
+      <h3>행사장 준비</h3>
+      <ul class="links">
+        <li><a href="qr.html">QR 안내판 만들기<small>배포 주소 기준 QR, A4 인쇄와 PNG 저장</small></a></li>
+        <li><a href="index.html">참가자용 프로그램 목록<small>확정 프로그램 3개만 보여요</small></a></li>
+      </ul>
+      <p class="muted small" id="modeInfo" style="margin:12px 0 0"></p>
+    </div>
+    <div class="card">
+      <h3>모니터 화면 (전체화면으로 띄우기)</h3>
+      <ul class="links">
+        <li><a href="apps/build-roulette/index.html?screen=1">BUILD ROULETTE 모니터<small>제출된 아이디어를 돌아가며 크게 표시</small></a></li>
+        <li><a href="apps/bug-museum/index.html?screen=1">Bug Museum 모니터<small>사연 전시와 올해의 버그 TOP 5</small></a></li>
+        <li><a href="apps/merge-conflict/index.html?screen=1">MERGE CONFLICT 모니터<small>실시간 투표 결과</small></a></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>검수 (부적절한 글 숨김)</h3>
+      <ul class="links">
+        <li><a href="apps/bug-museum/index.html?admin=1">Bug Museum 검수</a></li>
+        <li><a href="apps/build-roulette/index.html?admin=1">BUILD ROULETTE 검수</a></li>
+        <li><a href="apps/bug-patch-exchange/index.html?admin=1">Bug &amp; Patch Exchange 검수</a></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>설정 메모</h3>
+      <ul class="small" style="padding-left:18px; margin:8px 0 0">
+        <li>퀴즈 문항 세트: <code>apps/ai-or-human/index.html?set=이름</code>, 문항은 <code>questions.js</code></li>
+        <li>실시간 공유, QR 배포: <code>docs/deploy.md</code></li>
+        <li>메인 사이트 연동: <code>docs/main-site-integration.md</code></li>
+      </ul>
+      <div class="row" style="margin-top:12px">
+        <button class="btn ghost sm" id="logout">이 기기 참가자 전환</button>
+        <button class="btn ghost sm" id="reset">이 기기 데이터 초기화</button>
+      </div>
+    </div>
+  </div>
+
+  <h2>확정 프로그램</h2>
+  <div class="grid two" id="final"></div>
+
+  <h2>후보 아이디어 샘플</h2>
+  <p class="muted small" style="margin-top:-4px">스레드에서 제안된 나머지 아이디어예요. 참가자용 목록에는 나오지 않아요.</p>
+  <div class="grid two" id="others"></div>
+</main>
+<footer class="foot">GDG Seoul DevFest 2026 운영팀</footer>
+<script src="shared/firebase-config.js"></script>
+<script src="shared/core.js"></script>
+<script>if(!window.DFS){document.body.insertAdjacentHTML("afterbegin",'<div style="background:#ea4335;color:#fff;padding:14px;font-weight:700">⚠️ 공용 스크립트(shared/core.js)를 불러오지 못했어요. HTML 파일만 따로 받지 말고 저장소 전체(ZIP)를 받아 폴더 구조 그대로 열어주세요.</div>')}</script>
+<script src="shared/programs.js"></script>
+<script>
+function card(p) {
+  return `<a class="card prog" href="${DFS.esc(p.path)}">
+    <div class="em">${p.em}</div><h3>${DFS.esc(p.name)}</h3><p>${DFS.esc(p.desc)}</p>
+    <div class="meta"><span class="tag blue">${DFS.esc(p.place)}</span>${p.time ? `<span class="tag">${DFS.esc(p.time)}</span>` : ""}</div></a>`;
+}
+document.getElementById("final").innerHTML = window.DFS_PROGRAMS.filter((p) => p.final).map(card).join("");
+document.getElementById("others").innerHTML = window.DFS_PROGRAMS.filter((p) => !p.final).map(card).join("");
+document.getElementById("logout").onclick = () => { DFS.user.logout(); location.reload(); };
+document.getElementById("reset").onclick = () => {
+  const b = document.getElementById("reset");
+  if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = "한 번 더 누르면 초기화"; return; }
+  DFS.store.keys().forEach((k) => DFS.store.remove(k)); location.reload();
+};
+DFS.ready.then((m) => {
+  document.getElementById("modeInfo").innerHTML = m === "firebase"
+    ? "🟢 실시간 모드: 모든 참가자 기기가 같은 데이터를 공유해요."
+    : "💾 로컬 모드: 각자 기기에만 저장돼요. 참가자끼리 데이터를 공유하려면 <code>shared/firebase-config.js</code>를 설정하세요.";
+});
+</script>
+</body>
+</html>

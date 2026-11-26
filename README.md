@@ -8,6 +8,7 @@
 GDG Seoul DevFest Seoul 2026 운영팀 스레드(#devfestseoul-2026, 프로그램 및 운영 준비)에서 나온 아이디어를
 바로 체험할 수 있는 웹 샘플로 만든 저장소입니다.
 
+- **DevFest 메인 사이트 연동: [`docs/main-site-integration.md`](docs/main-site-integration.md)** (테마, 내비게이션, 스탬프 흐름, 메인 사이트에 넣을 섹션)
 - **QR로 바로 쓰는 실시간 버전 배포: [`docs/deploy.md`](docs/deploy.md)** (GitHub Pages + Firebase, QR 안내판 `qr.html`)
 - 스레드 요약: [`docs/thread-summary.md`](docs/thread-summary.md)
 - 운영 가이드 / 실제 행사 전환 방법: [`docs/operations.md`](docs/operations.md)
@@ -45,9 +46,11 @@ GitHub Pages: Settings → Pages → Branch `main` / root 로 켜면 QR 코드�
 
 ### 공통 기능
 
-- 참가자 확인은 닉네임만 입력 (구분값은 기기별 무작위 ID, 개인정보 미수집), 프로그램당 1개 프리퀀시 적립
-- `?screen=1` 모니터 화면 (룰렛, 박물관, 투표)
-- `?admin=1` 운영진 숨김 처리 (룰렛, 박물관, 고민 게시판)
+- 화면 테마와 상단 바는 DevFest 메인 사이트(devfest-seoul-2026.vercel.app)와 같게 맞춤
+- 참가자 확인은 닉네임만 입력 (구분값은 기기별 무작위 ID, 개인정보 미수집)
+- 프로그램을 끝내면 완료 인증 화면이 뜨고, 스태프에게 보여 준 뒤 메인 사이트 스탬프판에 도장을 받는 흐름 (프로그램당 1번)
+- `index.html`은 참가자용 목록 (확정 프로그램만), **`ops.html`은 운영진용 페이지** (모니터 화면, 검수, QR 안내판, 후보 프로그램 샘플)
+- `?screen=1` 모니터 화면 (룰렛, 박물관, 투표), `?admin=1` 운영진 숨김 처리 (룰렛, 박물관, 고민 게시판): 링크는 `ops.html`에 모아 둠
 - 저장 모드: `shared/firebase-config.js` 설정 시 **실시간 공유(Firestore)**, 미설정 시 이 브라우저에만 저장 (오른쪽 위 `🟢 실시간` / `💾 이 기기만` 표시)
 - `qr.html`: 배포 주소 기준 QR 안내판 생성, A4 인쇄 / PNG 다운로드
 
