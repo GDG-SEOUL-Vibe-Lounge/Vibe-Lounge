@@ -103,6 +103,14 @@ document.getElementById("mainLink").href = DFS.main.url + "/";
   kvImg.src = DFS.main.url + "/assets/kv-header.webp";
 }
 render();
+// 운영진용 페이지(ops.html)는 참가자 화면에 링크를 두지 않아요. 맨 아래 문구를 빠르게 5번 누르면 이동합니다.
+{
+  let taps = 0, timer;
+  document.querySelector("footer.foot").addEventListener("click", () => {
+    taps++; clearTimeout(timer); timer = setTimeout(() => { taps = 0; }, 1500);
+    if (taps >= 5) location.href = "ops.html";
+  });
+}
 </script>
 </body>
 </html>
