@@ -91,7 +91,6 @@
     <div class="card"><h3>🏆 올해의 버그 TOP 5</h3><ol class="rank" id="rank2" style="padding:0"></ol></div>
   </section>
 </main>
-<footer class="foot player-only">모니터 화면: <a href="index.html?screen=1">?screen=1</a>, 운영진 검수: <a href="index.html?admin=1">?admin=1</a></footer>
 
 <script src="../../shared/firebase-config.js"></script>
 <script src="../../shared/core.js"></script>
@@ -154,7 +153,7 @@ document.getElementById("send").onclick = async () => {
   const u = await DFS.user.require({ needNick: true });
   if (items().filter((x) => x.uid === u.uid).length >= MAX_PER_USER) { refreshQuota(); return DFS.toast("1인당 최대 2개까지 제보할 수 있어요"); }
   save((arr) => (arr.push({ id: DFS.id("b_"), cat: document.getElementById("cat").value, title, story, nick: u.nick, uid: u.uid, likes: [], reacts: {}, reviews: [], hidden: false, at: Date.now() }), arr));
-  // 사연 여러 개를 내도 프리퀀시는 최초 1회만
+  // 사연 여러 개를 내도 완료 인증(도장)은 최초 1회만
   DFS.freq.award(u.uid, "bug-museum", "2026 Bug Museum");
   DFS.renderWho();
   document.getElementById("title").value = ""; document.getElementById("story").value = "";
