@@ -10,11 +10,11 @@
   .c { aspect-ratio: 3/4; border-radius: 16px; position: relative; transform-style: preserve-3d; transition: transform .25s; }
   .c .f, .c .b { position: absolute; inset: 0; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex-direction: column; backface-visibility: hidden; }
   .c .b { background: repeating-linear-gradient(45deg, #b3261e, #b3261e 10px, #1e7d3c 10px, #1e7d3c 20px); border: 3px solid #fff3; }
-  .c .f { background: #fff; color: #222; transform: rotateY(180deg); font-size: clamp(34px, 9vw, 64px); }
+  .c .f { background: #fff; color: #222; border: 2px solid var(--line); transform: rotateY(180deg); font-size: clamp(34px, 9vw, 64px); }
   .c .f small { font-size: 14px; font-weight: 800; }
   .c.open { transform: rotateY(180deg); }
   .c.now { box-shadow: 0 0 0 4px var(--yellow); }
-  .beat { width: 22px; height: 22px; border-radius: 50%; background: var(--card-2); display: inline-block; }
+  .beat { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 2px solid var(--line); display: inline-block; }
   .beat.on { background: var(--yellow); }
   .stages { display: flex; gap: 8px; }
   .stages div { flex: 1; text-align: center; padding: 8px; border-radius: 10px; border: 1px solid var(--line); font-size: 13px; }
