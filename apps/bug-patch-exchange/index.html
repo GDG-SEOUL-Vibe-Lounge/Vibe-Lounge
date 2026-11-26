@@ -86,7 +86,7 @@ function renderList() {
   if (filter !== "all") list = list.filter((i) => status(i) === filter);
   list.sort((a, b) => b.at - a.at);
   document.getElementById("list").innerHTML = list.map((i) => `
-    <div class="card issue" data-id="${i.id}" style="${i.hidden ? "opacity:.4" : ""}">
+    <div class="card issue" data-id="${DFS.esc(i.id)}" style="${i.hidden ? "opacity:.4" : ""}">
       <div class="row between"><span class="st ${status(i)}">${status(i)}</span><span class="muted small">💬 ${i.patches.length}, 🙋 ${i.plus.length}</span></div>
       <h3 style="margin-top:8px">${DFS.esc(i.title)} <span class="num">#${i.n}</span></h3>
       <div class="muted small"><span class="tag">${DFS.esc(i.label)}</span> opened ${DFS.timeAgo(i.at)} by ${DFS.esc(i.nick)}</div>
@@ -114,8 +114,8 @@ function openIssue(id) {
     ${i.patches.map((p) => `<div class="patch ${p.accepted ? "accepted" : ""}">
         <div class="diffline">+ patch by ${DFS.esc(p.nick)}, ${DFS.timeAgo(p.at)} ${p.accepted ? ", ✅ merged" : ""}</div>
         <div style="white-space:pre-wrap; margin:4px 0">${DFS.esc(p.text)}</div>
-        <div class="row"><button class="btn ghost sm" data-up="${p.id}">👍 ${p.up.length}</button>
-        ${mine && !p.accepted ? `<button class="btn ghost sm" data-acc="${p.id}">Merge (도움 됐어요)</button>` : ""}</div>
+        <div class="row"><button class="btn ghost sm" data-up="${DFS.esc(p.id)}">👍 ${p.up.length}</button>
+        ${mine && !p.accepted ? `<button class="btn ghost sm" data-acc="${DFS.esc(p.id)}">Merge (도움 됐어요)</button>` : ""}</div>
       </div>`).join("") || `<p class="muted small">아직 Patch가 없어요. 첫 Patch를 남겨주세요!</p>`}
     <div class="card"><label style="margin-top:0">Patch 남기기</label><textarea id="pText" maxlength="400" placeholder="비슷한 경험이 있다면 해결 방법이나 조언을 남겨주세요."></textarea>
       <button class="btn" id="pSubmit" style="margin-top:8px">Submit patch</button></div>`;
