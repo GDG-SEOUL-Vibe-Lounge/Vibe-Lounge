@@ -167,7 +167,7 @@ function exhibitHTML(x, big) {
   const u = DFS.user.get();
   const c = catOf(x.cat);
   const liked = u && x.likes.includes(u.uid);
-  return `<div class="card exhibit ${x.hidden ? "hidden-ex" : ""}" data-id="${x.id}">
+  return `<div class="card exhibit ${x.hidden ? "hidden-ex" : ""}" data-id="${DFS.esc(x.id)}">
     <div class="plate">${c.emoji} ${c.label}, 제보 ${DFS.esc(x.nick)}, ${DFS.timeAgo(x.at)}</div>
     <h3>${DFS.esc(x.title)}</h3>
     <div class="story">${DFS.esc(x.story)}</div>
