@@ -207,8 +207,8 @@ function renderWall() {
       <div class="row between" style="margin-top:10px">
         <span class="muted small">by ${DFS.esc(x.nick)}, ${DFS.timeAgo(x.at)}</span>
         <span class="row">
-          ${admin ? `<button class="btn ghost sm" data-hide="${x.id}">${x.hidden ? "다시 공개" : "숨김"}</button>` : ""}
-          <button class="like ${liked ? "on" : ""}" data-like="${x.id}">❤️ ${x.likes.length}</button>
+          ${admin ? `<button class="btn ghost sm" data-hide="${DFS.esc(x.id)}">${x.hidden ? "다시 공개" : "숨김"}</button>` : ""}
+          <button class="like ${liked ? "on" : ""}" data-like="${DFS.esc(x.id)}">❤️ ${x.likes.length}</button>
         </span>
       </div>
     </div>`;

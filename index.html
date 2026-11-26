@@ -99,7 +99,7 @@ function renderStamps() {
   const mine = u ? DFS.freq.list(u.uid) : {};
   const srcs = ["build-roulette", "ai-or-human", "bug-museum", "ai-vault", "bug-patch", "merge-conflict", "worst-ux", "bug-hunters", "rhythm", "color-hunt"];
   const em = Object.fromEntries(PROGRAMS.map((p) => [p.src, p.em]));
-  document.getElementById("stamps").innerHTML = srcs.map((s) => `<div class="stamp ${mine[s] ? "on" : ""}" title="${s}">${mine[s] ? em[s] : ", "}</div>`).join("");
+  document.getElementById("stamps").innerHTML = srcs.map((s) => `<div class="stamp ${mine[s] ? "on" : ""}" title="${s}">${mine[s] ? em[s] : ""}</div>`).join("");
   document.getElementById("stampTxt").textContent = u ? `${u.nick}님, ${Object.keys(mine).length}개 적립 (프로그램당 1개)` : "프로그램에 참여하면 프로그램당 1개씩 적립돼요. 지급 방식(웹 자동 적립 / 실물 도장)은 운영팀 확정 전 샘플이에요.";
 }
 document.getElementById("logout").onclick = () => { DFS.user.logout(); location.reload(); };
